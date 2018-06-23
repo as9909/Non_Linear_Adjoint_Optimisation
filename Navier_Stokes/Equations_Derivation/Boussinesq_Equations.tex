@@ -1,0 +1,367 @@
+\documentclass[preprint,12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lipsum}
+\usepackage{amsmath,accents}
+\usepackage[labelfont={small}, font={normal}]{subfig} 
+
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\graphicspath{{./figures/}}
+\usepackage{amssymb}
+\usepackage{lineno}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage{tcolorbox}
+\usepackage{url}
+
+\title{\vspace{-0.75in}Boussineq Equations: Derivation and Numerical Approximation\vspace{-0.5in}}
+\begin{document}
+\maketitle	
+\vspace{-0.3in}
+\emph{(The derivation is based on the notes provided in \url{https://classes.soe.ucsc.edu/ams227/Fall13/lecturenotes/Chapter3.pdf})}
+\section{Setup and Derivation}
+We consider a channel flow (with an arbitary angle w.r.t. gravity) subjected to a temperature gradient between the two walls. Viscosity is assumed to be a function of temperature. 
+\begin{equation}
+\mu=f(T).
+\end{equation}
+The Cartesian coordinate system is fixed with respect to the channel which is assumed to be infinitely long in the stream-wise ($x_1=x$) and span-wise ($x_3=z$) directions. The wall (with the wall normal coordinate $x_2=y$) is assumed to be of height $H$. 
+
+In the absence of any flow, the steady state density, pressure and temperature (hydrostatic) are:
+\begin{subequations}\begin{eqnarray}
+{\overline{\rho}(\mathbf{x})}=\rho_{ref}+\rho_0(\mathbf{x}),\\
+{\overline{p}(\mathbf{x})}=p_{ref}+p_0(\mathbf{x}),\\
+{\overline{T}(\mathbf{x})}=T_{ref}+T_0(\mathbf{x}).
+\end{eqnarray}\end{subequations}
+
+The reference values for each of the three variables are the mean values and the terms with subscript $0$ are relatively small deviations about the mean i.e.
+\begin{subequations}\begin{eqnarray}
+\rho_0(\mathbf{x})<<\rho_{ref},\\
+p_0(\mathbf{x})<<p_{ref},\\
+T_0(\mathbf{x})<<T_{ref}.
+\end{eqnarray}\end{subequations}
+
+In the presence of an unsteady flow with velocity $\mathbf{u}(\mathbf{x},t)$ the perturbations in these three variables are:
+\begin{subequations}\begin{eqnarray}
+\rho(\mathbf{x},t)=	{\overline{\rho}(\mathbf{x})}+\hat{\rho}(\mathbf{x},t),\\
+p(\mathbf{x},t)=	{\overline{p}(\mathbf{x})}+\hat{p}(\mathbf{x},t),\\
+T(\mathbf{x},t)=	{\overline{T}(\mathbf{x})}+\hat{T}(\mathbf{x},t).
+	\end{eqnarray}\end{subequations}
+
+The governing equations for mass, momentum and energy conservation are:
+ \begin{subequations}\begin{align}
+ 	\frac{D{{\rho}}}{D{t}}+\rho\nabla\cdot\mathbf{u}=&0,\\
+ 	\rho\frac{D{\mathbf{u}}}{D{t}}=&-{\nabla} {p}-\rho \mathbf{g} +{\nabla}\cdot\Big({\mu}\big({\nabla} \mathbf{{u}}+({\nabla} \mathbf{{u}})^T\big)\Big),\\
+ 	\rho c_v \frac{D{T}}{D{t}}=&-p\nabla\cdot\mathbf{u}+\nabla\cdot(k\nabla T).
+ 	\end{align}\end{subequations}
+We have assumed absence of a heat flux and removed the (often) negligible viscous dissipation of heat from the energy equation. The hydrostatic balance is:
+ \begin{subequations}\begin{align}
+\nabla \overline{p}=-\overline{\rho}\mathbf{g},\\
+\nabla\cdot(k\nabla \overline{T})=0.
+ 	\end{align}\end{subequations}
+
+Defining the characteristic density and temperature difference to be that between the top and the bottom wall in the hydrostatic case:
+ \begin{subequations}\begin{align}
+\Delta \rho_0=|\overline{\rho}(H)-\overline{\rho}(0)|,\\
+\Delta T_0=|\overline{T}(H)-\overline{T}(0)|,
+ 	\end{align}\end{subequations}
+ and dimensionalising the governing equations with the following:
+ \begin{equation}
+ \tilde{\mathbf{x}}=\frac{\mathbf{x}}{H},\hspace{.2in} \tilde{\mathbf{u}}=\frac{\mathbf{u}}{U}, \hspace{.2in} \tilde{t}=t\frac{U}{H},\hspace{.2in} \tilde{T}=\frac{T}{{\Delta T_0}},\hspace{.2in}\tilde{p}=\frac{p}{\rho_{ref} U^2},\hspace{.2in}\tilde{\rho}=\frac{\rho}{\Delta\rho_0},\hspace{.2in}\tilde{\mu}=\frac{\mu}{\mu_{ref}}.
+ \end{equation}
+ The mass conservation equation is:
+ \begin{equation}
+\frac{U\Delta \rho_0}{H}\frac{\partial {\tilde{\rho_0}+\tilde{\hat{\rho}} }}{\partial \tilde{t}}+\frac{U}{H}(\rho_{ref}+\Delta \rho_0 (\tilde{\rho_0}+\tilde{\hat{\rho}}))\tilde{\nabla}\cdot\tilde{u}+ \frac{U\Delta \rho_0}{H}\tilde{u}\cdot\tilde{\nabla}(\tilde{\rho_0}+\tilde{\hat{\rho}})=0,
+ \end{equation}
+ or
+ \begin{equation}
+ \frac{\partial (\tilde{\rho_0}+\tilde{\hat{\rho}})}{\partial \tilde{t}}+\Big(\frac{\rho_{ref}}{\Delta \rho_0}+(\tilde{\rho_0}+\tilde{\hat{\rho}})\Big)\tilde{\nabla}\cdot\tilde{u}+ \tilde{u}\cdot\tilde{\nabla}(\tilde{\rho_0}+\tilde{\hat{\rho}})=0,
+ \end{equation}
+ where $\tilde{\rho}=\tilde{\rho_0}+\tilde{\hat{\rho}}$. As $\rho_{ref}>> \Delta \rho_0$
+ \begin{equation}
+\tilde{\nabla}\cdot\tilde{u}=0.
+ \end{equation}
+ The momentum equation is non\textendash dimensionalised as following:
+ \begin{equation}
+   \frac{U^2}{H}(\rho_{ref}+\Delta \rho_0 (\tilde{\rho_0}+\tilde{\hat{\rho}}))\frac{D \tilde{u}}{D \tilde{t}}=-\frac{\rho_{ref}U^2}{H}\tilde{\nabla}\tilde{p}-(\rho_{ref}+\Delta \rho_0 (\tilde{\rho_0}+\tilde{\hat{\rho}}))\mathbf{g}+\frac{\mu_{ref}U}{H^2}\tilde{\nabla}\cdot\Big({\tilde{\mu}}\big({\tilde{\nabla}} \mathbf{\tilde{u}}+(\tilde{\nabla} \mathbf{\tilde{u}})^T\big)\Big),
+ \end{equation}
+ or using the hydrostatic relationship
+ \begin{equation}
+ \frac{D \tilde{u}}{D \tilde{t}}=-\tilde{\nabla}\tilde{\hat{p}}-\frac{H\Delta \rho_0}{U^2\rho_{ref}} \tilde{\hat{\rho}}\mathbf{g}+\frac{\mu_{ref}}{\rho_{ref}HU}\tilde{\nabla}\cdot\Big({\tilde{\mu}}\big({\tilde{\nabla}} \mathbf{\tilde{u}}+(\tilde{\nabla} \mathbf{\tilde{u}})^T\big)\Big).
+ \end{equation}
+ 
+ The energy equation can be non\textendash  dimensionalised as following:
+ \begin{equation}
+  	(\rho_{ref}+\Delta \rho_0 (\tilde{\rho_0}+\tilde{\hat{\rho}}))\frac{\Delta T_0 U}{H}c_v \frac{D{\tilde{T}}}{D{\tilde{t}}}=-\frac{\rho_{ref}U^3}{H}\tilde{p}\tilde{\nabla}\cdot\mathbf{\tilde{u}}+\frac{\Delta T_0}{H^2}\tilde{\nabla}\cdot(k\tilde{\nabla} \tilde{T}),
+ \end{equation}
+ or
+ \begin{equation}
+ \frac{D{\tilde{T}}}{D{\tilde{t}}}=-\frac{U^2}{c_v\Delta T_0}\tilde{p}\tilde{\nabla}\cdot\mathbf{\tilde{u}}+\frac{1}{c_v\rho_{ref}HU}\tilde{\nabla}\cdot(k\tilde{\nabla} \tilde{T}),
+ \end{equation}
+Decomposing the pressure and temperature into hydrostatic part and perturbation about it and using the hydrostatic relation
+\begin{equation}
+\frac{D{\tilde{\hat{T}}}}{D{\tilde{t}}}+\mathbf{\tilde{u}}\cdot\tilde{\nabla}{\tilde{
+		{T_0}}}=-\frac{U^2\tilde{p}_{ref}}{c_v\Delta T_0}\tilde{\nabla}\cdot\mathbf{\tilde{u}}+\frac{1}{c_v\rho_{ref}HU}\tilde{\nabla}\cdot(k\tilde{\nabla} \tilde{\hat{T}}),
+\end{equation}
+ 
+\subsection{Liquids}
+ \begin{equation}
+ \frac{\hat{\rho}}{\rho_{ref}}=\frac{1}{\rho_{ref}}\Big(\frac{\partial \rho}{\partial T}\Big)_{\bar{\rho},\bar{T}}\hat{T}=-\alpha\hat{T},
+ \end{equation}
+ where $\alpha$ is the \textit{coefficient of thermal expansion}. In the non\textendash dimensional form this is 
+ \begin{equation}
+\frac{\Delta \rho_0\tilde{\hat{\rho}}}{{\rho_{ref}}}=-\alpha\Delta T_0\tilde{\hat{T}}.
+ \end{equation}
+ Therefore, the momentum equation can be re-written as
+ \begin{equation}
+ \frac{D \tilde{u}}{D \tilde{t}}=-\tilde{\nabla}\tilde{\hat{p}}+\frac{H\alpha\Delta T_0}{U^2} \tilde{\hat{T}}\mathbf{g}+\frac{\mu_{ref}}{\rho_{ref}HU}\tilde{\nabla}\cdot\Big({\tilde{\mu}}\big({\tilde{\nabla}} \mathbf{\tilde{u}}+(\tilde{\nabla} \mathbf{\tilde{u}})^T\big)\Big).
+ \end{equation}
+ For liquids (as they are incompressible) the energy/ temperature scalar transport equation is:
+\begin{equation}
+\frac{D{\tilde{\hat{T}}}}{D{\tilde{t}}}+\mathbf{\tilde{u}}\cdot\tilde{\nabla}{\tilde{{T_0}}}=\frac{1}{\rho_{ref}HU}\tilde{\nabla}\cdot(k\tilde{\nabla} \tilde{\hat{T}}),
+\end{equation}
+Defining the non\textendash dimensional groups
+\begin{equation}
+Ri_b=\frac{\alpha {{\Delta T_0}}g H}{U^2}, Re=\frac{\rho_{ref} U H}{\mu_\text{ref}},  Pr=\frac{\mu_\text{ref}}{\rho_{ref} (k/c_v)},
+\end{equation}
+dropping $\tilde{}$ and noting $\hat{T}=T$, $\hat{p}=p$ we can re-write the equations as following:
+ \begin{subequations}\begin{align}
+\nabla\cdot\mathbf{u}=&0,\\
+	\frac{D{\mathbf{u}}}{D{t}}=&-{\nabla} {p}+Ri_b T\mathbf{n} +\frac{1}{Re}{\nabla}\cdot\Big({\mu}\big({\nabla} \mathbf{{u}}+({\nabla} \mathbf{{u}})^T\big)\Big),\\
+ \frac{D{T}}{D{t}}+\mathbf{{u}}\cdot{\nabla}{{{T_0}}}=&\frac{1}{Pr Re}\nabla^2 T.
+	\end{align}\end{subequations}
+We emphasise that $T$ and $p$ are the deviation from hydrostatic temperature and pressure distributions and ${T}_0$ is the hydrostatic temperature deviation from its mean.
+\subsection{Gases}
+We will consider gases later.
+
+ \section{Numerical Discretisation}
+ \emph{This section is based on Tom Bewley's algorithm provided in the book Numerical Renaissance: \url{http://numerical-renaissance.com/NR.pdf}}
+ \subsection{Spatial Discretisation}
+We will assume $x$ and $z$ to be periodic and calculate the derivatives in these directions using spectral differentiation. The grid is uniform in these directions and in the wall normal direction $y$, the grid will be modified to cluster near the walls with the following equation:
+\begin{equation}
+y_j=\text{tanh}\Bigg(C\Big(\frac{2(j-1)}{NY}-1\Big)\Bigg)
+\end{equation}
+for the base grid $j\in[0,\dots, NY+2]$. The fractional grid is defined to lie exactly between the two base grid points:
+\begin{equation}
+y_{j+1/2}=\frac{1}{2}(y_j+y_{j+1}).
+\end{equation}
+The spatial derivatives in the $x$ and $z$ are calculated spectrally using fast Fourier transform algorithm and the spatial derivatives in the wall normal $y$ direction are evaluated using central finite difference schemes. Variables are stored in the following manner:
+\begin{itemize}
+	\item Base grid ($j$): $v$
+	\item Fractional grid ($j+1/2$): $u$, $w$, $p$ and $T$ 
+\end{itemize}
+We may need $v$ at the fractional grid and the fractional grid variables at the base grid. To interpolate we use the following:
+ \begin{subequations}\begin{align}
+ \bar{v}_{j+1/2}=\frac{1}{2}\big(v_{j+1}+v_j\big)\\
+ \check{u}_j=\frac{1}{2\Delta y_j}\big(\Delta y_{j+1/2}u_{j+1/2}+\Delta y_{j-1/2}u_{j-1/2}\big)\\ 	\check{\check{u}}_j=\frac{1}{2\Delta y_j}\big(\Delta y_{j-1/2}u_{j+1/2}+\Delta y_{j+1/2}u_{j-1/2}\big)
+\end{align}\end{subequations} 	
+\subsubsection{x-momentum equation}
+\begin{align}	\begin{split}
+\frac{\partial u}{\partial t}=&-\Bigg[\frac{\partial u^2}{\partial x}+\frac{\partial uv}{\partial y}+\frac{\partial uw}{\partial z}\Bigg]-\frac{\partial p}{\partial x}+Ri_bT n_1\\&+\frac{1}{Re}\Bigg[\frac{\partial }{\partial x}\Bigg(2\mu\frac{\partial u}{\partial x}\Bigg)+\frac{\partial }{\partial y}\Bigg(\mu\Big(\frac{\partial u}{\partial y}+\frac{\partial v}{\partial x}\Big)\Bigg)+\frac{\partial }{\partial z}\Bigg(\mu\Big(\frac{\partial u}{\partial z}+\frac{\partial w}{\partial x}\Big)\Bigg)\Bigg]
+\end{split}	\end{align}
+
+\begin{align}	\begin{split}
+&\frac{\partial u}{\partial t}\Bigg|_{i,j+1/2,k}=-\Bigg[\frac{\delta_s u^2}{\delta x}\Bigg|_{j+1/2}+\frac{(\bar{u}v)_{j+1}-(\bar{u}v)_{j}}{\Delta y_{j+1/2}}+\frac{\delta_s uw}{\delta z}\Bigg|_{j+1/2}\Bigg]-\frac{\delta_s p}{\delta x}\Bigg|_{j+1/2}\\&+Ri_bn_1T|_{j+1/2} +\frac{1}{Re}\Bigg[\frac{\delta_s }{\delta x}\Big(2\mu\frac{\delta_s u}{\delta x}\Big)\Bigg|_{j+1/2}+\frac{\delta_s }{\delta z}\Bigg(\mu\Big(\frac{\delta_s u}{\delta z}+\frac{\delta_s w}{\delta x}\Big)\Bigg)\Bigg|_{j+1/2}\\&+\frac{1}{\Delta y_{j+1/2}}\Bigg(\check{\check{\mu}}_{j+1}\Bigg(\frac{u_{j+3/2}-u_{j+1/2}}{\Delta y_{j+1}}+\frac{\delta_s v}{\delta x}\Bigg|_{j+1}\Bigg)-\check{\check{\mu}}_{j}\Bigg(\frac{u_{j+1/2}-u_{j-1/2}}{\Delta y_{j}}+\frac{\delta_s v}{\delta x}\Bigg|_{j}\Bigg)\Bigg] 
+\end{split}	\end{align} 
+
+\subsubsection{y-momentum equation}
+\begin{align}	\begin{split}
+\frac{\partial v}{\partial t}=&-\Bigg[\frac{\partial uv}{\partial x}+\frac{\partial v^2}{\partial y}+\frac{\partial vw}{\partial z}\Bigg]-\frac{\partial p}{\partial y}+Ri_bT n_2\\&+\frac{1}{Re}\Bigg[\frac{\partial }{\partial x}\Big(\mu\Big(\frac{\partial v}{\partial x}+\frac{\partial u}{\partial y}\Big)\Big)+\frac{\partial }{\partial y}\Bigg(2\mu\frac{\partial v}{\partial y}\Bigg)+\frac{\partial }{\partial z}\Bigg(\mu\Big(\frac{\partial v}{\partial z}+\frac{\partial w}{\partial y}\Big)\Bigg)\Bigg]
+\end{split}	\end{align}
+
+\begin{align}	\begin{split}
+&\frac{\partial v}{\partial t}\Bigg|_{i,j,k}=-\Bigg[\frac{\delta_s \check{u}v}{\delta x}\Bigg|_{j}+\frac{(\bar{v}^2)_{j+1/2}-(\bar{v}^2)_{j-1/2}}{\Delta y_{j}}+\frac{\delta_s v\check{w}}{\delta z}\Bigg|_{j}\Bigg]-\frac{p_{j+1/2}-p_{j-1/2}}{\Delta y_j}+Ri_bn_2\check{\check{T}}|_{j} \\&+\frac{1}{Re}\Bigg[\frac{\delta_s}{\delta x}\Big(\check{\check{\mu}}_j\Big(\frac{\delta_s v}{\delta x}\Big|_j+\frac{u_{j+1/2}-u_{j-1/2}}{\Delta y_j}\Big)\Big)+\frac{2}{\Delta y_j}\Big(\mu_{j+1/2}\frac{v_{j+1}-v_j}{\Delta y_{j+1/2}}-\mu_{j-1/2}\frac{v_{j}-v_{j-1}}{\Delta y_{j-1/2}} \Big)\\&+\frac{\delta_s }{\delta z}\Big(\check{\check{\mu}}_j\Big(\frac{\delta_s v}{\delta z}\Big|_j+\frac{w_{j+1/2}-w_{j-1/2}}{\Delta y_j}\Big)\Bigg] 
+\end{split}	\end{align} 
+
+\subsubsection{z-momentum equation}
+\begin{align}	\begin{split}
+\frac{\partial w}{\partial t}=&-\Bigg[\frac{\partial uw}{\partial x}+\frac{\partial vw}{\partial y}+\frac{\partial w^2}{\partial z}\Bigg]-\frac{\partial p}{\partial z}+Ri_bT n_3\\&+\frac{1}{Re}\Bigg[\frac{\partial }{\partial x}\Bigg(\mu\Big(\frac{\partial w}{\partial x}+\frac{\partial u}{\partial z}\Big)\Bigg)+\frac{\partial }{\partial y}\Bigg(\mu\Big(\frac{\partial w}{\partial y}+\frac{\partial v}{\partial z}\Big)\Bigg)+\frac{\partial }{\partial z}\Bigg(2\mu\frac{\partial w}{\partial z}\Bigg)\Bigg]
+\end{split}	\end{align}
+
+\begin{align}	\begin{split}
+&\frac{\partial w}{\partial t}\Bigg|_{i,j+1/2,k}=-\Bigg[\frac{\delta_s uw}{\delta x}\Bigg|_{j+1/2}+\frac{(v\bar{w})_{j+1}-(v\bar{w})_{j}}{\Delta y_{j+1/2}}+\frac{\delta_s 
+	w^2}{\delta z}\Bigg|_{j+1/2}\Bigg]-\frac{\delta_s p}{\delta z}\Bigg|_{j+1/2}\\&+Ri_bn_3T|_{j+1/2} +\frac{1}{Re}\Bigg[\frac{\delta_s }{\delta x}\Bigg(\mu\Big(\frac{\delta_s w}{\delta x}+\frac{\delta_s u}{\delta z}\Big)\Bigg)\Bigg|_{j+1/2}+\frac{\delta_s }{\delta z}\Big(2\mu\frac{\delta_s w}{\delta z}\Big)\Bigg|_{j+1/2}\\&+\frac{1}{\Delta y_{j+1/2}}\Bigg(\check{\check{\mu}}_{j+1}\Bigg(\frac{w_{j+3/2}-w_{j+1/2}}{\Delta y_{j+1}}+\frac{\delta_s v}{\delta z}\Bigg|_{j+1}\Bigg)-\check{\check{\mu}}_{j}\Bigg(\frac{w_{j+1/2}-w_{j-1/2}}{\Delta y_{j}}+\frac{\delta_s v}{\delta z}\Bigg|_{j}\Bigg)\Bigg] 
+\end{split}	\end{align} 
+
+\subsubsection{Scalar equation}
+
+\begin{equation}
+\frac{\partial T}{\partial t}=-\Bigg[\frac{\partial (uT)}{\partial x}+\frac{\partial (vT)}{\partial y}+\frac{\partial (wT)}{\partial z}+\frac{\partial (u{T_0})}{\partial x}+\frac{\partial (v{T_0})}{\partial y}+\frac{\partial (w{T_0})}{\partial z}\Bigg]+\frac{1}{Pr Re} \Big(\frac{\partial^2 T}{\partial x^2}+\frac{\partial^2 T}{\partial y^2}+\frac{\partial^2 T}{\partial z^2}\Big)
+\end{equation}
+
+%\begin{align}	\begin{split}
+%\frac{\partial T}{\partial t}\Big|_{i,j+1/2,k}=&-\Bigg[\frac{ \delta_s(u(T+T_0))}{\delta x}\Big|_{j+1/2}+\frac{(v(\check{\check{T}}+\check{\check{T_0}}))_{j+1}-((v\check{\check{T}}+v\check{\check{T}_0}))_{j}}{\Delta y_{j+1/2}}+\frac{ \delta_s(w(T+T_0))}{\delta z}\Big|_{j+1/2}+\frac{ \delta_s(u{T_0})}{\delta x}\Big|_{j+1/2}\\&+\frac{(v\check{\check{{T_0}}})_{j+1}-(v\check{\check{{T_0}}})_{j}}{\Delta y_{j+1/2}}+\frac{ \delta_s(wT_0)}{\delta z}\Big|_{j+1/2} \Bigg]\\&+\frac{1}{PrRe}\Bigg(\frac{\delta_s^2T}{\delta x^2}+\frac{1}{\Delta y_{i+1/2}}\Big(\frac{T_{j+3/2}-T_{j+1/2}}{\Delta y_{j+1}}-\frac{T_{j+1/2}-T_{j-1/2}}{\Delta y_{j}}\Big) +\frac{\delta_s^2T}{\delta z^2}\Bigg)
+%\end{split}	\end{align} 
+\begin{align}	\begin{split}
+\frac{\partial T}{\partial t}\Big|_{i,j+1/2,k}=&-\Bigg[\frac{ \delta_s(u(T+T_0))}{\delta x}\Big|_{j+1/2}+\frac{(v(\check{\check{T}}+\check{\check{T_0}}))_{j+1}-(v(\check{\check{T}}+\check{\check{T}}_0))_{j}}{\Delta y_{j+1/2}}+\frac{ \delta_s(w(T+T_0))}{\delta z}\Big|_{j+1/2} \Bigg]\\&+\frac{1}{PrRe}\Bigg(\frac{\delta_s^2T}{\delta x^2}\Bigg|_{j+1/2}+\frac{1}{\Delta y_{j+1/2}}\Big(\frac{T_{j+3/2}-T_{j+1/2}}{\Delta y_{j+1}}-\frac{T_{j+1/2}-T_{j-1/2}}{\Delta y_{j}}\Big) +\frac{\delta_s^2T}{\delta z^2}\Bigg|_{j+1/2}\Bigg)
+\end{split}	\end{align} 
+\subsubsection{Incompressibility}
+\begin{equation}
+\nabla\cdot \mathbf{u}=\frac{\partial u}{\partial x}+\frac{\partial v}{\partial y}+\frac{\partial w}{\partial z}=\frac{\delta_s u_{j+1/2}}{\delta x}+\frac{v_{j+1}-v_j}{\Delta y_{j+1/2}}+\frac{\delta_s w_{j+1/2}}{\delta z}
+\end{equation}
+\subsubsection{Pressure Poisson}
+\begin{equation}
+\nabla^2 p=\frac{\partial^2 p}{\partial x^2}+\frac{\partial^2 p}{\partial y^2}+\frac{\partial^2p}{\partial z^2}=\frac{\delta_s^2 p_{j+1/2}}{\delta x^2}+\frac{1}{\Delta y_{j+1/2}}\Big(\frac{p_{j+3/2}-p_{j+1/2}}{\Delta y_{j+1}}-\frac{p_{j+1/2}-p_{j-1/2}}{\Delta y_{j}}\Big)+\frac{\delta_s^2 p_{j+1/2}}{\delta z^2}
+\end{equation}
+
+\subsection{Temporal Discretisation}
+The low storage third order Runge-Kutta Wray scheme that treats part of the terms implicitly using Crank Nicholson and part explicitly using Runge- Kutte scheme is used for time advancement. For a pde
+\begin{equation}
+\frac{\partial \phi}{\partial t}=N(\phi)+A(\phi)
+\end{equation}
+the terms condensed into $N(\phi)$ are treated explicitly and in $A(\phi)$ implicitly. Therefore, $A(\phi)$ must be either linear or linearised appropriately. 
+The three substeps required for a $\Delta t$ from $t^n\rightarrow t^{n+1}=t^n+\Delta t$ advancement in time are:
+\begin{subequations}\label{eq:temporal discretisation}\begin{align}
+\phi'=&\phi^n+\gamma_1 \Delta t N(\phi^n)+\zeta_1 \Delta t N(\phi^{-''})+\alpha_1\Delta t\frac{A(\phi')+A(\phi^n)}{2},\\
+\phi''=&\phi'+\gamma_2 \Delta t N(\phi')+\zeta_2 \Delta t N(\phi^{n})+\alpha_2\Delta t\frac{A(\phi'')+A(\phi')}{2},\\
+\phi^{n+1}=&\phi''+\gamma_3 \Delta t N(\phi'')+\zeta_3 \Delta t N(\phi')+\alpha_3\Delta t\frac{A(\phi^{n+1})+A(\phi'')}{2}.
+\end{align}\end{subequations}
+The coefficient are given by:
+\begin{equation}
+\gamma_1=\frac{8}{15}, \gamma_2=\frac{5}{12}, \gamma_3=\frac{3}{4}, \zeta_1=0, \zeta_2=-\frac{17}{60}, \zeta_3=-\frac{5}{12}, \alpha_1=\frac{8}{15}, \alpha_2=\frac{2}{15}, \alpha_3=\frac{1}{3}
+\end{equation}
+Writing each of these step as $rk=1,2$ and 3, the equations \eqref{eq:temporal discretisation} can be compactly written as:
+\begin{equation}
+\phi^{rk}=\phi^{rk-1}+\gamma_{rk}\Delta t N(\phi^{rk-1})+\zeta_{rk}\Delta t N(\phi^{rk-2})+\alpha_{rk}\Delta t\frac{A(\phi^{rk})+A(\phi^{rk-1})}{2}
+\end{equation}
+We will consider the terms involving spatial derivatives in the wall parallel ($x$ and $z$) directions explicitly as they are calculated spectrally. It is not theoretically impossible to treat them as one could write the spectral derivatives as a product with spectral derivative matrix. However, such a matrix will be dense and hence inverting it would not be efficient. Due to the stretched grid used, the grid size is largely reduced near the wall. This would require a very small step size $\Delta t$ if treated explicitly. Hence, in the terms involving the wall normal derivatives are treated implicitly. Some of these need to be linearised and are explained below.
+\subsubsection{Scalar Equation}
+Considering first the scalar equation with $\phi$ in \eqref{eq:temporal discretisation} as $T$.
+The explicit terms are:
+\begin{align}\label{eq:implicit_Temperature_1}
+\begin{split}
+N(\phi)=&-\Bigg[\frac{ \delta_s(u(T+T_0))}{\delta x}\Big|_{j+1/2}+-\frac{(v(\check{\check{T}}+\check{\check{T_0}}))_{j+1}-(v(\check{\check{T}}+\check{\check{T}}_0))_{j}}{\Delta y_{j+1/2}}+\frac{ \delta_s(w(T+T_0))}{\delta z}\Big|_{j+1/2} \Bigg]\\&+\frac{1}{PrRe}\Bigg(\frac{\delta_s^2T}{\delta x^2}\Bigg|_{j+1/2} +\frac{\delta_s^2T}{\delta z^2}\Bigg|_{j+1/2}\Bigg)
+\end{split}\end{align}
+The implicit terms are:
+\begin{equation}\label{eq:explicit_Temperature_1}
+A(\phi)=\frac{1}{PrRe}\Bigg(\frac{1}{\Delta y_{j+1/2}}\Big(\frac{T_{j+3/2}-T_{j+1/2}}{\Delta y_{j+1}}-\frac{T_{j+1/2}-T_{j-1/2}}{\Delta y_{j}}\Big)\Bigg)
+\end{equation}
+
+Hence, solving the temperature equation at the time step $rk$ will provide:
+\begin{equation}
+T^{rk}\rightarrow\mu^{rk}
+\end{equation} 
+\subsubsection{Momentum Equations}
+The momentum equations can be re-written as:
+\begin{align}
+\begin{split}
+\mathbf{u}^{rk}=&\mathbf{u}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{u}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{u}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{u}^{rk})+A(\mathbf{u}^{rk-1})}{2}\\&-\alpha_{rk}\Delta t\frac{\delta p^{rk-1}}{\delta x_i}-\alpha_{rk}\Delta t\frac{\delta q}{\delta x_i}
+\end{split}
+\end{align} 
+where 
+\begin{equation}
+q\mathrel{\mathop:}= p^{rk}-p^{rk-1}
+\end{equation}
+The fractional step strategy is to break the momentum equation into two distinct steps:
+\begin{equation}
+\mathbf{v}^{rk}=\mathbf{u}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{u}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{u}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{v}^{rk})+A(\mathbf{u}^{rk-1})}{2}-\alpha_{rk}\Delta t\frac{\delta p^{rk-1}}{\delta x_i}
+\end{equation} 
+with 
+\begin{equation}
+\mathbf{u}^{rk}=\mathbf{v}^{rk}-\alpha_{rk}\Delta t \nabla q,
+\end{equation}
+\begin{equation}
+\nabla\cdot(\mathbf{u}^{rk})=0=\nabla\cdot(\mathbf{v}^{rk})-\alpha_{rk}\Delta t \nabla ^2 q.
+\end{equation}
+Therefore,
+\begin{equation}
+\nabla ^2 q=\frac{1}{\alpha_{rk}\Delta t}\nabla\cdot(\mathbf{v}^{rk}),
+\end{equation}
+and update the pressure as
+\begin{equation}
+p^{rk}=p^{rk-1}+q.
+\end{equation}
+\paragraph{$y$ momentum equation:}
+First consider the $y$ momentum equation (to avoid confusion we will use $v_2$ as y component of intermediate velocity $\mathbf{v}$ and $u_2$ as that for the actual velocity $\mathbf{u}$):
+\begin{equation}\label{eq:implicit_V}
+A(u_2^{rk})=-\frac{\delta ({u_2^{rk}})^2}{\delta y}+Ri_b n_2\check{\check{T}}^{rk}+\frac{2}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta y}\Big)
+\end{equation}
+\emph{(although there are cross derivative terms involving the y- derivative, but they must be treated explicitly due to the use of spectral derivatives)}
+
+\begin{equation}
+\tilde{A}(v_2^{rk})=-\frac{\delta ({v_2^{rk}})^2}{\delta y}+Ri_b n_2\check{\check{T}}^{rk}+\frac{2}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_2^{rk}}{\delta y}\Big),
+\end{equation}
+
+\begin{equation}
+\mathcal{O}((\Delta t)^2)=(v_2^{rk}-u_2^{rk-1})^2=(v_2^{rk})^2-2v_2^{rk}u_2^{rk-1}+(u_2^{rk-1})^2=0\rightarrow (v_2^{rk})^2=2v_2^{rk}u_2^{rk-1}-(u_2^{rk-1})^2.
+\end{equation}
+The fully explicit terms thus generated from this approximation exactly cancels the first term in the $A(u_2^{rk})$ in equation \eqref{eq:implicit_V}.
+Therefore,
+\begin{equation}
+A(u_2^{rk})=Ri_b n_2\check{\check{T}}^{rk}+\frac{2}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta y}\Big),
+\end{equation}
+and,
+\begin{equation}
+{A}(v_2^{rk})=-2\frac{\delta ({v_2^{rk}}u_2^{rk-1})}{\delta y}+Ri_b n_2\check{\check{T}}^{rk}+\frac{2}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_2^{rk}}{\delta y}\Big).
+\end{equation}
+As we already know the $T$ at the current step from solving the scalar equation first, the Crank -Nicholson terms are modified to: 
+\begin{equation}
+A(u_2^{rk})=Ri_b n_2(\check{\check{T}}^{rk}+\check{\check{T}}^{rk+1})+\frac{2}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta y}\Big),
+\end{equation}
+and,
+\begin{equation}
+{A}(v_2^{rk})=-2\frac{\delta ({v_2^{rk}}u_2^{rk-1})}{\delta y}+\frac{2}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_2^{rk}}{\delta y}\Big).
+\end{equation}
+
+Also,
+\begin{equation}
+N(v^{rk})=-\frac{\delta {(uv)}^{rk}}{\delta x}-\frac{\delta {(vw)}^{rk}}{\delta z}+\frac{1}{Re}\Bigg[\frac{\delta}{\delta x}\Big({{\mu^{rk}}}\Big(\frac{\delta v^{rk}}{\delta x}+\frac{\delta u^{rk}}{\delta y} \Big)\Big)+\frac{\delta }{\delta z}\Big({{\mu^{rk}}}\Big(\frac{\delta v^{rk}}{\delta z}+\frac{\delta w^{rk}}{\delta y} \Big)\Bigg] 
+\end{equation}
+Now we can solve for $v_2$.
+We have all the ingredients to solve for $v_1$ and $v_3$.
+\paragraph{$x$ momentum equation:}
+\begin{equation}
+A(u_1^{rk})=-\frac{\delta (u_1^{rk}u_2^{rk})}{\delta y}+Ri_b n_1{{T}}^{rk}+\frac{1}{Re}\Bigg[\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_1^{rk}}{\delta y}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta x}\Big)\Bigg],
+\end{equation}
+\begin{equation}
+{A}(v_1^{rk})=-\frac{\delta (v_1^{rk}v_2^{rk})}{\delta y}+Ri_b n_1{{T}}^{rk}+\frac{1}{Re}\Bigg[\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_1^{rk}}{\delta y}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk}\frac{\delta v_2^{rk}}{\delta x}\Big)\Bigg].
+\end{equation}
+As we already know the $T$ and $v_2$ at the current step from solving the scalar $v_2$ equation first, the Crank -Nicholson terms are modified to: 
+\begin{equation}
+A(u_1^{rk})=-\frac{\delta (u_1^{rk}u_2^{rk})}{\delta y}+Ri_b n_1({{T}}^{rk}+{{T}}^{rk+1})+\frac{1}{Re}\Bigg[\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_1^{rk}}{\delta y}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta x}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk+1}\frac{\delta v_2^{rk+1}}{\delta x}\Big)\Bigg],
+\end{equation}
+\begin{equation}
+{A}(v_1^{rk})=-\frac{\delta (v_1^{rk}v_2^{rk})}{\delta y}+\frac{1}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_1^{rk}}{\delta y}\Big).
+\end{equation}
+The explicit term is: 
+\begin{equation}
+N(u^{rk})=-\frac{\delta {(u^2)}^{rk}}{\delta x}-\frac{\delta {(uw)}^{rk}}{\delta z} +\frac{1}{Re}\Bigg[\frac{\delta}{\delta x}\Big({2\mu^{rk}}\frac{\delta u^{rk}}{\delta x}\Big)+\frac{\delta }{\delta z}\Big({{\mu^{rk}}}\Big(\frac{\delta u^{rk}}{\delta z}+\frac{\delta w^{rk}}{\delta x} \Big)\Bigg].
+\end{equation}
+
+\paragraph{$z$ momentum equation:}
+\begin{equation}
+A(u_3^{rk})=-\frac{\delta (u_2^{rk}u_3^{rk})}{\delta y}+Ri_b n_3
+{{T}}^{rk}+\frac{1}{Re}\Bigg[\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_3^{rk}}{\delta y}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta z}\Big)\Bigg],
+\end{equation}
+\begin{equation}
+{A}(v_3^{rk})=-\frac{\delta (v_2^{rk}v_3^{rk})}{\delta y}+Ri_b n_3
+{{T}}^{rk}+\frac{1}{Re}\Bigg[\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_3^{rk}}{\delta y}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk}\frac{\delta v_2^{rk}}{\delta z}\Big)\Bigg].
+\end{equation}
+As we already know the $T$ and $v_2$ at the current step from solving the scalar $v_2$ equation first, the Crank -Nicholson terms are modified to: 
+
+\begin{equation}
+A(u_3^{rk})=-\frac{\delta (u_2^{rk}u_3^{rk})}{\delta y}+Ri_b n_3
+({{T}}^{rk}+{{T}}^{rk+1})+\frac{1}{Re}\Bigg[\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta u_3^{rk}}{\delta y}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk}\frac{\delta u_2^{rk}}{\delta z}\Big)+\frac{\delta }{\delta y}\Big(\mu^{rk+1}\frac{\delta v_2^{rk+1}}{\delta z}\Big)\Bigg],
+\end{equation}
+\begin{equation}
+{A}(v_3^{rk})=-\frac{\delta (v_2^{rk}v_3^{rk})}{\delta y}+\frac{1}{Re}\frac{\delta}{\delta y}\Big(\mu^{rk}\frac{\delta v_3^{rk}}{\delta y}\Big).
+\end{equation}
+
+The explicit term is: 
+\begin{equation}
+N(w^{rk})=-\frac{\delta {(uw)}^{rk}}{\delta x}-\frac{\delta {(w^2)}^{rk}}{\delta z} +\frac{1}{Re}\Bigg[\frac{\delta}{\delta z}\Big({2\mu^{rk}}\frac{\delta w^{rk}}{\delta z}\Big)+\frac{\delta }{\delta x}\Big({{\mu^{rk}}}\Big(\frac{\delta u^{rk}}{\delta z} + \frac{\delta w^{rk}}{\delta x}\Big)\Bigg].
+\end{equation}
+
+%\begin{equation}
+%(v^{rk}-v^{rk-1})(T^{rk}-T^{rk-1})\sim \mathcal{O}(\Delta t^2),
+%\end{equation}
+%therefore,
+%\begin{equation}
+%v^{rk}T^{rk}-v^{rk}T^{rk-1}-v^{rk-1}T^{rk}+v^{rk-1}T^{rk-1}\sim \mathcal{O}(\Delta t^2)=0,
+%\end{equation}
+%or
+%\begin{equation}
+%v^{rk}T^{rk}=v^{rk}T^{rk-1}+v^{rk-1}T^{rk}-v^{rk-1}T^{rk-1}.
+%\end{equation}
+%Therefore, the explicit and implicit terms in equations \eqref{eq:explicit_Temperature_1} and \eqref{eq:implicit_Temperature_1} must be modified into
+
+\end{document}

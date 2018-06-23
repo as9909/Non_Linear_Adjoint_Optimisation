@@ -229,5 +229,4 @@ END DO
 END DO
 END SUBROUTINE Initial_Conditions_Temperature
 
-
 END MODULE Channel_IC
