@@ -25,12 +25,16 @@ REAL(KIND=DP), INTENT(IN) :: U_bulk, Kick, Lx, Ly, Lz
 INTEGER :: I, J, K
 INTEGER, DIMENSION(:), ALLOCATABLE :: seed
 REAL(KIND=DP) :: Rand_num
+REAL(KIND=DP), PARAMETER :: alfa_t=1
 REAL(KIND=DP), DIMENSION(1:NZ), INTENT(IN) :: kz
 REAL(KIND=DP), DIMENSION(1:NX/2+1), INTENT(IN) :: kx
 REAL(KIND=DP), DIMENSION(0:NY), INTENT(IN) :: DY, DYF
 type(C_PTR), INTENT(IN) :: plan_fwd, plan_bkd
 REAL(KIND=DP), DIMENSION(0:NY+1), INTENT(IN)  :: GYF
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(OUT) :: U, V, W
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: P
+
+P = 0.0_DP
 DO I  = 1,NX
   DO J = 1, NZ
     DO K = 0, NY+1
@@ -59,12 +63,12 @@ V(:,:,0)=0.0_DP
 V(:,:,NY+1)=0.0_DP
 W(:,:,0)=0.0_DP
 W(:,:,NY+1)=0.0_DP
-CALL Velocity_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
+CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
 V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_upper, W_wall_lower, &
 U_wall_upper, V_wall_lower, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
-CALL  Remove_Divergence(NX, NY, NZ, Lx, Lz, kx, kz, DY, DYF, plan_fwd, &
-                        plan_bkd, U, V, W)
-CALL Velocity_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
+CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
+                              plan_bkd, U, V, W, P)
+CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
 V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_upper, W_wall_lower, &
 U_wall_upper, V_wall_lower, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
 END SUBROUTINE Initial_Conditions_velocity
