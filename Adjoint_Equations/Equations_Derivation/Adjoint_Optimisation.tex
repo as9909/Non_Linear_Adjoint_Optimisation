@@ -1,0 +1,627 @@
+\documentclass[preprint,12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lipsum}
+\usepackage{amsmath,accents}
+\usepackage[labelfont={small}, font={normal}]{subfig} 
+
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\graphicspath{{./figures/}}
+\usepackage{amssymb}
+\usepackage{lineno}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage{tcolorbox}
+\usepackage{url}
+
+\title{\vspace{-0.75in}Adjoint Equations for thermally stratified flow allowing for viscosity stratification\vspace{-0.5in}}
+\begin{document}
+\maketitle	
+\vspace{-0.6in}
+\section{Setup}
+We consider a channel flow with a temperature gradient between the two walls. Viscosity is assumed to be a function of temperature. 
+\begin{equation}
+\mu=f(T).
+\end{equation}
+\section{Governing (Direct) Equations}
+The flow is governed by mass conservation (continuity), momentum conservation and scalar transport equation. The flow is assumed to be Boussinesq (this could be an issue as Boussineq approximation requires small temperature difference and it could be too little to have any significance difference in viscosity).
+
+The mass conservation is:
+\begin{equation}
+\frac{1}{\rho}\frac{D\rho}{Dt}+\nabla\cdot \mathbf{u}=0,
+\end{equation}
+Assuming the vertical scale to be small such that the hydrostatic pressure variations do not cause large density changes. Using the equation of state for an ideal gas:
+\begin{equation}
+\rho_{ref}=\frac{P_{ref}}{RT_{ref}},
+\end{equation}
+the variation of density at a constant pressure can be written as
+\begin{tcolorbox}
+\begin{align}\label{eq:boussineq_1}
+\begin{split}
+\delta \rho&=\bigg(\frac{\partial \rho_{ref}}{\partial T_{ref}}\bigg)_P\delta T \hspace{0.1in} \rightarrow \hspace{0.1in} \delta \rho=-\frac{P_{ref}}{R T_{ref}^2}\delta T \hspace{0.1in} \\&\rightarrow \hspace{0.1in}  \frac{\delta\rho}{\rho_{ref}}=-\alpha\delta T,\hspace{0.2in} \alpha=-\frac{1}{\rho_{ref}}\bigg(\frac{\partial \rho_{ref}}{\partial T_{ref}}\bigg)_{P,ref}=\frac{1}{T_{ref}}
+\end{split}
+\end{align}
+\end{tcolorbox}
+This is the Boussineq approximation. Comparing the terms in the mass conservation equation:
+\begin{equation}
+\frac{(1/\rho) (D\rho/Dt)}{\nabla\cdot \mathbf{u}}\sim \frac{(1/\rho)u(\partial \rho/\partial x)}{\partial u/\partial x}\sim\frac{(U/\rho)(\delta \rho/L)}{U/L}=\frac{\delta \rho}{\rho}=-\alpha T \ll 1,
+\end{equation}
+we arrive at the incompressibility condition for the compressible fluid:
+\begin{equation}\label{eq:incompressibility}
+\nabla\cdot \mathbf{u}=0.
+\end{equation}
+The momentum equation is:
+\begin{equation}\label{eq:momentum_1}
+\rho\frac{D\mathbf{u}}{Dt}=-\nabla p-\rho \mathbf{g}+\nabla\Big(\mu\big(\nabla \mathbf{u}+(\nabla \mathbf{u})^T\big)\Big).
+\end{equation}
+Decomposing pressure and density as following
+\begin{equation}
+p(\mathbf{x},t)=p_0({x}_2)+p_{ref}+p'(\mathbf{x},t),
+\end{equation}
+\begin{equation}
+\rho=\rho_0+\rho_{ref}+\rho',
+\end{equation}
+with $\rho_{ref}$ and $p_{ref}$ as constants. Considering the hydrostatic equilibium state with pressure $p_0(x_2)$ and a constant density $\rho_0(x_2)$:
+\begin{equation}
+\nabla p_0=-(\rho_0+\rho_{ref}) \mathbf{g}.
+\end{equation}
+Using this and momentum equation \eqref{eq:momentum_1} 
+\begin{equation}
+\rho\frac{D\mathbf{u}}{Dt}=-\nabla p'-\rho' \mathbf{g}+\nabla\Big(\mu\big(\nabla \mathbf{u}+(\nabla \mathbf{u})^T\big)\Big).
+\end{equation}
+Dividing through by $\rho_0$,
+\begin{equation}
+\Bigg(1+\frac{\rho_{0}}{\rho_{ref}}+\frac{\rho'}{\rho_{ref}}\Bigg)\frac{D\mathbf{u}}{Dt}=-\frac{1}{\rho_{ref}}\nabla p'-\frac{\rho'}{\rho_{ref}} \mathbf{g}+\frac{1}{\rho_{ref}}\nabla\Big(\mu\big(\nabla \mathbf{u}+(\nabla \mathbf{u})^T\big)\Big).
+\end{equation}
+Assuming $\rho'\ll \rho_0\ll \rho_{ref}$,  but with strong gravity
+\begin{equation}
+\frac{D\mathbf{u}}{Dt}=-\frac{1}{\rho_{ref}}\nabla p'-\frac{\rho'}{\rho_{ref}} \mathbf{g}+\frac{1}{\rho_{ref}}\nabla\Big(\mu\big(\nabla \mathbf{u}+(\nabla \mathbf{u})^T\big)\Big),
+\end{equation}
+which using equation \eqref{eq:boussineq_1} with $\delta \rho=\rho'$, $\delta T=T'$ is
+\begin{equation}\label{eq:Momentum}
+\frac{D\mathbf{u}}{Dt}=-\frac{1}{\rho_{ref}}\nabla p'+\alpha T' \mathbf{g}+\frac{1}{\rho_{ref}}\nabla\Big(\mu\big(\nabla \mathbf{u}+(\nabla \mathbf{u})^T\big)\Big).
+\end{equation}
+The equation for the internal energy is:
+\begin{equation}
+\rho\frac{D e}{D t}=-\nabla\cdot \mathbf{q}-p(\nabla\cdot \mathbf{u})+\phi.
+\end{equation}
+The internal energy, $e=C_v T$, and
+\begin{equation}
+p(\nabla\cdot \mathbf{u})=-\frac{p}{\rho}\frac{D\rho}{Dt}\simeq \frac{p}{\rho}\bigg(\frac{\partial \rho}{\partial T}\bigg)_P\frac{DT}{Dt}=-p\alpha \frac{D T}{Dt}=-\rho R T \alpha \frac{D T}{Dt}=-\rho(C_p-C_v)\frac{D T}{Dt}
+\end{equation}
+therefore
+\begin{equation}\label{eq:energy_1}
+C_p\rho\frac{D T}{D t}=-\nabla\cdot \mathbf{q}+\phi.
+\end{equation}
+Viscous heating, $\phi$, can be neglected in most cases as
+\begin{equation}
+\frac{\phi}{C_p\rho DT/Dt}\sim \frac{2\mu e_{ij}e_{ij}}{C_p\rho u_j\delta T/\delta x_j}\sim\frac{\mu U^2/L^2}{C_p\rho U \delta T/L}=\frac{\mu U/L}{C_p\rho \delta T}=\frac{\nu}{C_p}\frac{U}{L\delta T}\ll 1
+\end{equation}
+Using Fourier's law of heat conduction
+\begin{equation}
+\mathbf{q}=-k \nabla T.
+\end{equation}
+Hence, using $T(\mathbf{x},t)=T_0+T'(\mathbf{x},t)$ equation \eqref{eq:energy_1} can be written as
+\begin{equation}\label{eq:Temperature}
+\frac{DT'}{Dt}+\mathbf{u}\cdot\nabla T_0=\kappa \nabla^2T',
+\end{equation}
+where $\kappa=k/(\rho C_p)\simeq k/(\rho_0 C_p)$.
+Non- dimensionalising equations \eqref{eq:incompressibility}, \eqref{eq:Momentum} and \eqref{eq:Temperature} with the following:
+\begin{equation}
+\tilde{\mathbf{x}}=\frac{\mathbf{x}}{H},\hspace{.2in} \tilde{\mathbf{u}}=\frac{\mathbf{u}}{u_f}, \hspace{.2in} \tilde{t}=t\frac{u_f}{H},\hspace{.2in} \tilde{T'}=\frac{T'}{\overline{\Delta T}},\hspace{.2in}\tilde{p}=\frac{p}{\rho_{ref} u_f^2},\hspace{.2in}\tilde{\mu}=\frac{\mu}{\mu_{ref}}.
+\end{equation}
+where $H$ is the channel height, $u_f$ is a reference velocity, $\overline{\Delta T}=T_{top}-T_{bottom}$, $\mu_{ref}$ is a reference viscosity.
+\begin{equation}
+\tilde{\nabla}\cdot\tilde{\mathbf{u}}=0,
+\end{equation}
+\begin{equation}
+\frac{u_f^2}{H}\frac{D\tilde{\mathbf{u}}}{D\tilde{t}}=-\frac{u_f^2}{H}\tilde{\nabla} \tilde{p'}+\alpha {\overline{\Delta T}}g \tilde{T'} \mathbf{\hat{n}}+\frac{\mu_\text{ref}u_f}{\rho_0H^2}\tilde{\nabla}\Big(\tilde{\mu}\big(\tilde{\nabla} \mathbf{\tilde{u}}+(\tilde{\nabla} \mathbf{\tilde{u}})^T\big)\Big),
+\end{equation}
+or,
+\begin{equation}
+\frac{D\tilde{\mathbf{u}}}{D\tilde{t}}=-\tilde{\nabla} \tilde{p'}+\frac{\alpha {\overline{\Delta T}}g H}{u_f^2}\tilde{T'} \mathbf{\hat{n}}+\frac{\mu_\text{ref}}{\rho_0u_fH}\tilde{\nabla}\Big(\tilde{\mu}\big(\tilde{\nabla} \mathbf{\tilde{u}}+(\tilde{\nabla} \mathbf{\tilde{u}})^T\big)\Big),
+\end{equation}
+and
+\begin{equation}
+\frac{D\tilde{T}'}{D\tilde{t}}+\tilde{\mathbf{u}}\cdot \tilde\nabla \tilde{T_0}=\frac{\kappa}{u_fH} \tilde\nabla^2\tilde{T}'.
+\end{equation}
+
+Dropping tile the mass conservation is
+\begin{tcolorbox}
+\begin{equation}\label{eq:direct_incompressibility}
+{\nabla}\cdot{\mathbf{u}}=0,
+\end{equation}
+\end{tcolorbox}
+There are two ways to non dimensionalise momentum and temperature i.e. using a Gashroff number or a Reynolds number
+\subsection{Gashroff number}
+Defining the velocity scale, $u_f$ from the combination of gravity and buoyancy:
+\begin{equation}
+u_f=\sqrt{\alpha  \overline{\Delta T} g H},
+\end{equation}
+after dropping tilde the momentum equation becomes
+\begin{equation}
+\frac{D{\mathbf{u}}}{D{t}}=-{\nabla} {p'}+{T'} \mathbf{\hat{n}}+\sqrt{\frac{1}{Ga}}{\nabla}\Big({\mu}\big({\nabla} \mathbf{{u}}+({\nabla} \mathbf{{u}})^T\big)\Big),
+\end{equation}
+and the temperature equation
+\begin{equation}
+\frac{D{T}'}{D{t}}=\frac{1}{\sqrt{Ga }Pr} \nabla^2\tilde{T}'.
+\end{equation}
+where the non- dimensional numbers Gashroff ($Ga$) and Prandtl ($Pr$) are 
+\begin{equation}
+Ga=\frac{g\overline{\Delta T} \alpha H^3 \rho_0^2}{\mu_\text{ref}^2}, Pr=\frac{\mu_\text{ref}}{\rho_0 \kappa}
+\end{equation}
+\subsection{Reynolds number}
+\begin{tcolorbox}
+\begin{equation}\label{eq:direct_momentum}
+\frac{D{\mathbf{u}}}{D{t}}=-{\nabla} {p'}+{Ri_bT'} \mathbf{\hat{n}}+{\frac{1}{Re}}{\nabla}\Big({\mu}\big({\nabla} \mathbf{{u}}+({\nabla} \mathbf{{u}})^T\big)\Big),
+\end{equation}
+
+\begin{equation}\label{eq:direct_scalar}
+\frac{D{T}'}{D{t}}+{\mathbf{u}}\cdot \nabla {T_0}=\frac{1}{{Re }Pr} \nabla^2{T}'.
+\end{equation}
+where the non- dimensional numbers bulk Richardson ($Ri_b$), Reynolds and Prandtl ($Pr$) are 
+\begin{equation}
+Ri_b=\frac{\alpha {\overline{\Delta T}}g H}{u_f^2}, Re=\frac{\rho_0 u_f H}{\mu_\text{ref}},  Pr=\frac{\mu_\text{ref}}{\rho_0 \kappa}
+\end{equation}
+\end{tcolorbox}
+
+\section{Reynolds Averaged Navier Stokes}
+Decomposing the variables into mean (spatial average) and fluctuations about the mean:
+\begin{equation}\label{eq:decomposition}
+\mathbf{u}={\mathbf{U}}+\mathbf{u}'; {p'}=P+{p};  T'=\overline{T}+{T};  \mu=\overline{\mu}+\mu' 
+\end{equation}
+The spatial average of a variable, $a$ is defined as
+\begin{equation}
+\bar{a}=\int_V a \text{d}V,
+\end{equation}
+where $V$ is a fixed volume. This allows the spatial and temporal gradients to be commutative, i.e.
+\begin{eqnarray}
+\overline{\frac{\partial a}{\partial (x,t)}}=\int_V \frac{\partial a}{\partial x,t} \text{d}V=\frac{\partial }{\partial (x,t)}\int_V \partial a \text{d}V=\frac{\partial\bar{a}}{\partial (x,t)}
+\end{eqnarray}
+Average of the fluctuation quantities is zero by definition. Therefore, from the continuity equation:
+\begin{equation}
+\frac{\partial U_i}{\partial x_i}=0; \hspace{0.2in}\frac{\partial u_i'}{\partial x_i}=0;
+\end{equation}
+Using the decomposition in \eqref{eq:decomposition}, dropping the tilde from the velocity and averaging the momentum equation \eqref{eq:Momentum} leads to
+\begin{equation}\label{eq:momentum_average}
+\frac{\partial {U_i}}{\partial t}+U_j\frac{\partial U_i}{\partial x_j}+\overline{u_j\frac{\partial u_i}{\partial x_j}}=-\frac{\partial P}{\partial x_i}+{Ri_b\overline{T}} n_{i}+{\frac{1}{Re}}\frac{\partial}{\partial x_j}\Big(2{\overline{\mu}}S_{ij}+2\overline{{\mu}'s_{ij}}\Big).
+\end{equation}
+Subtracting this from the momentum equation leads to the momentum equation \eqref{eq:Momentum} for fluctuations:
+\begin{equation}\label{eq:momentum_fluctuations}
+\frac{\partial {u_i}}{\partial t}+u_j\frac{\partial U_i}{\partial x_j}+U_j\frac{\partial u_i}{\partial x_j}+u_j\frac{\partial u_i}{\partial x_j}-\overline{u_j\frac{\partial u_i}{\partial x_j}}=-\frac{\partial p}{\partial x_i}+{Ri_b{T}} n_i+{\frac{1}{Re}}\frac{\partial}{\partial x_j}\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}-2\overline{{\mu}'s_{ij}}\Big).
+\end{equation}
+\section{Energy: For cost functions}
+
+\subsection{Mean Kinetic Energy}
+The evolution of mean kinetic energy can be obtained by multiplying the mean momentum equation \eqref{eq:momentum_average} with $U_i$:
+\begin{equation}\label{eq:energy_average}
+\frac{\partial {U_i^2/2}}{\partial t}+U_j\frac{\partial U_i^2/2}{\partial x_j}+U_i{\frac{\partial \overline{u_iu_j}}{\partial x_j}}=-U_i\frac{\partial P}{\partial x_i}+{Ri_b\overline{T}}U_i n_i+{\frac{1}{Re}}U_i\frac{\partial}{\partial x_j}\Big(2{\overline{\mu}}S_{ij}+2\overline{{\mu}'s_{ij}}\Big),
+\end{equation}
+\begin{align}\begin{split}
+\frac{\overline{D}}{Dt}\frac{U_i^2}{2}=&\frac{\partial}{\partial x_j}\Big[-U_jP-U_i\overline{u_iu_j}+\frac{1}{Re}U_i\Big(2{\overline{\mu}}S_{ij}+2\overline{{\mu}'s_{ij}}\Big)\Big]\\&-\frac{1}{Re}\frac{\partial U_i}{\partial x_j}\Big(2{\overline{\mu}}S_{ij}+2\overline{{\mu}'s_{ij}}\Big)+{Ri_b\overline{T}}U_i n_i+\frac{\partial U_i}{\partial x_j} \overline{u_iu_j},
+\end{split}
+\end{align}
+\begin{align}\begin{split}
+\frac{\overline{D}}{Dt}\frac{U_i^2}{2}=&\frac{\partial}{\partial x_j}\Big[-U_jP-U_i\overline{u_iu_j}+\frac{1}{Re}U_i\Big(2{\overline{\mu}}S_{ij}+2\overline{{\mu}'s_{ij}}\Big)\Big]\\&-\frac{2}{Re}{\overline{\mu}}S_{ij}S_{ij}\\&-\frac{2}{Re}S_{ij}\overline{{\mu}'s_{ij}}+{Ri_b\overline{T}}U_i n_i+S_{ij}\overline{u_iu_j},
+\end{split}
+\end{align}
+where the $\partial U_i/\partial x_j$ in the last two lines has been replaced by $S_{ij}$ as it is multiplied with a symmetric tensor.
+\begin{tcolorbox}
+\begin{equation}\label{eq:Mean_Energy_1}
+\frac{\overline{D}}{Dt}\frac{U_i^2}{2}=\frac{\partial T_{ij,mean}}{\partial x_j}+\epsilon_{mean}+P_{ij,mean}
+\end{equation}
+\begin{align}
+T_{ij,mean}&=-U_jP-U_i\overline{u_iu_j}+\frac{1}{Re}U_i\Big(2{\overline{\mu}}S_{ij}+2\overline{{\mu}'s_{ij}}\Big)\label{eq:Mean_Energy_2}\\
+\epsilon_{mean}&=-\frac{2}{Re}{\overline{\mu}}S_{ij}S_{ij}\label{eq:Mean_Energy_3}\\
+P_{ij,mean}&=-\frac{2}{Re}S_{ij}\overline{{\mu}'s_{ij}}+{Ri_b\overline{T}}U_2 +S_{ij}\overline{u_iu_j}.\label{eq:Mean_Energy_4}
+\end{align}
+\end{tcolorbox}
+\subsection{Turbulent Kinetic Energy}
+The evolution of turbulent kinetic energy of can be obtained by multiplying fluctuating momentum equation \eqref{eq:momentum_fluctuations} with $u_i$  
+\begin{align}\begin{split}
+u_i\frac{\partial u_i}{\partial t}&+u_iU_j\frac{\partial u_i}{\partial x_j}+u_iu_j\frac{\partial u_i}{\partial x_j}+u_iu_j\frac{\partial U_i}{\partial x_j}-u_i\overline{u_j\frac{\partial u_i}{\partial x_j}}=-u_i\frac{\partial {p}}{\partial x_i}+Ri_b{T}n_iu_i\\&+\frac{1}{Re}u_i\frac{\partial}{\partial x_j}\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}-2\overline{{\mu}'s_{ij}}\Big),
+\end{split}\end{align}
+\begin{align}\begin{split}
+\Bigg(\frac{\partial}{\partial t}&+U_j\frac{\partial }{\partial x_j}\Bigg)\frac{u_i^2}{2}+\frac{\partial }{\partial x_j}\frac{u_i^2u_j}{2}+u_iu_j\frac{\partial U_i}{\partial x_j}-u_i\overline{u_j\frac{\partial u_i}{\partial x_j}}=-\frac{\partial {pu_i}}{\partial x_i}+Ri_b{T}n_iu_i\\&+\frac{1}{Re}u_i\frac{\partial}{\partial x_j}\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}-2\overline{{\mu}'s_{ij}}\Big),
+\end{split}\end{align}
+\begin{align}\begin{split}
+\Bigg(\frac{\partial}{\partial t}&+U_j\frac{\partial }{\partial x_j}\Bigg)\frac{u_i^2}{2}+\frac{\partial }{\partial x_j}\frac{u_i^2u_j}{2}+u_iu_j\frac{\partial U_i}{\partial x_j}-u_i\overline{u_j\frac{\partial u_i}{\partial x_j}}=-\frac{\partial {pu_i}}{\partial x_i}+Ri_b{T}n_iu_i\\&+\frac{1}{Re}\frac{\partial}{\partial x_j}\Bigg(u_i\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}-2\overline{{\mu}'s_{ij}}\Big)\Bigg)-\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}-2\overline{{\mu}'s_{ij}}\Big),
+\end{split}\end{align},
+
+\begin{align}\begin{split}
+\Bigg(\frac{\partial}{\partial t}&+U_j\frac{\partial }{\partial x_j}\Bigg)\frac{u_i^2}{2}-u_i\overline{u_j\frac{\partial u_i}{\partial x_j}}=\frac{\partial}{\partial x_j}\Bigg[-pu_j-\frac{u_i^2u_j}{2}+\frac{1}{Re}u_i\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}-2\overline{{\mu}'s_{ij}}\Big)\Bigg]\\&+Ri_b{T}n_iu_i-u_iu_jS_{ij}-\frac{2}{Re}S_{ij}\mu's_{ij}-\frac{1}{Re}s_{ij}\Big(2{{\mu'}}s_{ij}+2{\overline{\mu}}s_{ij}-2\overline{{\mu}'s_{ij}}\Big),
+\end{split}\end{align}
+
+Taking the average:
+\begin{align}\begin{split}
+\Bigg(\frac{\partial}{\partial t}&+U_j\frac{\partial }{\partial x_j}\Bigg)\frac{\overline{u_i^2}}{2}=\frac{\partial}{\partial x_j}\Bigg[-\overline{pu_j}-\frac{\overline{u_i^2u_j}}{2}+\frac{1}{Re}\overline{u_i\Big(2{{\mu'}s_{ij}}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}\Big)}\Bigg]\\&+Ri_b\overline{Tn_iu_i}-\overline{u_iu_j}S_{ij}-\frac{2}{Re}S_{ij}\overline{\mu's_{ij}}-\frac{1}{Re}\Big(2\overline{{\mu'}s_{ij}s_{ij}}+2{\overline{\mu}}\hspace{0.02in}\overline{s_{ij}s_{ij}}\Big),
+\end{split}\end{align}
+\begin{tcolorbox}
+\begin{equation}\label{eq:Fluc_Energy_1}
+\frac{\overline{D}}{Dt}\frac{u_i^2}{2}=\frac{\partial T_{ij,fluct}}{\partial x_j}+\epsilon_{fluct}+P_{ij,fluct}
+\end{equation}
+\begin{align}
+T_{ij,fluct}&=-\overline{pu_j}-\frac{\overline{u_i^2u_j}}{2}+\frac{1}{Re}\overline{u_i\Big(2{{\mu'}s_{ij}}+2{\overline{\mu}}s_{ij}+2{{\mu'}}S_{ij}\Big)}\label{eq:Fluc_Energy_2}\\
+\epsilon_{fluct}&=-\frac{2}{Re}\overline{{\mu}s_{ij}s_{ij}}\label{eq:Fluc_Energy_3}\\
+P_{ij,fluct}&=-\frac{2}{Re}S_{ij}\overline{\mu's_{ij}}+Ri_b\overline{Tu_in_i}-S_{ij}\overline{u_iu_j}.\label{eq:Fluc_Energy_4}
+\end{align}
+\end{tcolorbox}
+From equations \eqref{eq:Mean_Energy_1}- \eqref{eq:Mean_Energy_4} with \eqref{eq:Fluc_Energy_1}- \eqref{eq:Fluc_Energy_4} we can notice the following:
+\begin{itemize}
+	\item In a closed volume the integrated effect of $T_{ij}$ terms is zero and these are referred to as transport terms.
+	\item Mean dissipation is unaffected by viscosity fluctuations, however these fluctuations play a role in dissipating fluctuating kinetic energy.
+	\item The shear production, $S_{ij}u_iu_j$, transfers mean kinetic energy to fluctuating kinetic energy as it appears in both equations, albeit with opposite signs.
+	\item The viscosity production, $S_{ij}\overline{\mu's_{ij}}$ appears in both the equations with same sign therefore it has same effect on both the mean and fluctuating parts.
+	\item The bouyancy production in mean is proportional to $\overline{T}U_2$ and in fluctuation kinetic energy is proportional to $\overline{Tu_2}$.
+\end{itemize}
+\begin{tcolorbox}
+We may want to optimise for the total kinetic energy in a particular volume defined as:
+\begin{equation}
+E_K=\int_V u_i^2 \text{d}V
+\end{equation}
+or its dissipation defined as:
+\begin{equation}
+E_{K,disp}=\int_V \frac{2}{Re}\Big(\overline{{\mu'}s_{ij}s_{ij}}+{\overline{\mu}}\hspace{0.02in}\overline{s_{ij}s_{ij}}\Big) \text{d}V
+\end{equation}
+\end{tcolorbox}
+\subsection{Potential Energy}
+The potential energy in the fluctuations/ perturbations is defined as:
+\begin{equation}
+PE=-Ri_b \frac{\rho'^2}{2}
+\end{equation}
+which using the Boussineq approximation is:
+\begin{tcolorbox}
+\begin{equation}\label{eq:potenEnergy}
+PE=\frac{1}{2}Ri_b \Big(\frac{1}{T_{ref}}\Big)^2T'^2
+\end{equation}
+\end{tcolorbox}
+Similar to the dissipation of kinetic energy we may want dissipation of $T'^2$. Considering it to be a conserved scalar
+\begin{equation}
+\frac{\partial T'}{\partial t}+u_i\frac{\partial (T'+T_0)}{\partial x_i}=\frac{1}{Re Pr}\frac{\partial^2T'}{\partial x_j^2}
+\end{equation}
+using the decomposition defined in the previous section and dropping $'$ from $u_i'$
+\begin{equation}
+\frac{\partial }{\partial t}(\overline{T}+T)+(U_i+u_i)\frac{\partial }{\partial x_i}(\overline{T}+T+T_0)=\frac{1}{Re Pr}\frac{\partial^2}{\partial x_j^2}(\overline{T}+T)
+\end{equation}
+taking the average:
+\begin{equation}
+\frac{\partial\overline{T} }{\partial t}+U_i\frac{\partial (\overline{T}+T_0)}{\partial x_i}+\overline{{u_i}\frac{\partial {T}}{\partial x_i}}=\frac{1}{Re Pr}\frac{\partial^2\overline{T}}{\partial x_j^2}
+\end{equation}
+The fluctuating counterpart is
+
+\begin{equation}
+\frac{\partial {T}}{\partial t}+{u_i}\frac{\partial (\overline{T}+T_0)}{\partial x_i}+U_i\frac{\partial {T}}{\partial x_i}+{u_i}\frac{\partial {T}}{\partial x_i}-\overline{{u_i}\frac{\partial {T}}{\partial x_i}}=\frac{1}{Re Pr}\frac{\partial^2T}{\partial x_j^2}
+\end{equation}
+Multiplying this by $T$
+
+\begin{equation}
+\frac{\partial {T^2/2}}{\partial t}+Tu_i\frac{\partial (\overline{T}+T_0)}{\partial x_i}+U_i\frac{\partial {T^2/2}}{\partial x_i}+u_iT\frac{\partial {T}}{\partial x_i}-T\overline{{u_i}\frac{\partial {T}}{\partial x_i}}=\frac{1}{Re Pr}T\frac{\partial^2T}{\partial x_j^2}
+\end{equation}
+
+\begin{equation}
+\frac{\overline{D} {T^2/2}}{D t}+Tu_i\frac{\partial (\overline{T}+T_0)}{\partial x_i}+\frac{\partial {u_iT^2/2}}{\partial x_i}-T\overline{{u_i}\frac{\partial {T}}{\partial x_i}}=\frac{1}{Re Pr}\Big(\frac{\partial^2T^2/2}{\partial x_j^2}-\frac{\partial T}{\partial x}\frac{\partial T}{\partial x}\Big)
+\end{equation}
+
+\begin{equation}
+\frac{\overline{D} {T^2/2}}{D t}=\frac{\partial}{\partial x_i}\Bigg(\frac{1}{Re Pr}\frac{\partial T^2/2}{\partial x_j}-\frac {u_iT^2}{2}\Bigg)+T\overline{{u_i}\frac{\partial {T}}{\partial x_i}}-Tu_i\frac{\partial (\overline{T}+T_0)}{\partial x_i}-\frac{1}{Re Pr}\frac{\partial T}{\partial x}\frac{\partial T}{\partial x}
+\end{equation}
+Taking average leads to
+\begin{equation}
+\frac{\overline{D} {\overline{T^2}/2}}{D t}=\frac{\partial}{\partial x_i}\Bigg(\frac{1}{Re Pr}\frac{\partial \overline{T^2}/2}{\partial x_j}-\frac {\overline{u_iT^2}}{2}\Bigg)-\overline{Tu_i}\frac{\partial (\overline{T}+T_0)}{\partial x_i}-\frac{1}{Re Pr}\overline{\frac{\partial T}{\partial x}\frac{\partial T}{\partial x}}
+\end{equation}
+Therefore besides optimising for the PE mentioned in equation \eqref{eq:potenEnergy} we can optimise for dissipation of scalar:
+\begin{tcolorbox}
+\begin{equation}
+E_{P,disp}=Ri_b\Big(\frac{1}{T_{ref}}\Big)^2\frac{1}{RePr}\overline{\frac{\partial T}{\partial x}\frac{\partial T}{\partial x}}
+\end{equation}
+\end{tcolorbox}
+%This section is based upon (cite the two papers/ website).
+%
+%The potential energy of the fluid in a volume $V$ is defined as 
+%\begin{equation}
+%E_p=g\int_V\rho y \text{d}V
+%\end{equation}
+%One may define a background potential energy, $E_b$ i.e. the minimum potential energy that could be attained by adiabatic redistribution of density, $\rho$
+%\begin{equation}
+%E_b=g\int_V\rho y^* \text{d}V
+%\end{equation}
+%The available potential energ, $E_a$y i.e. released in an adiabatic transition from $\rho(\mathbf{x},t)$ to $\rho(y^*)$ is 
+%\begin{equation}
+%E_a=g\int_V\rho (y-y^*) \text{d}V
+%\end{equation}
+%In closed systems diabatic processes will conserve $\rho(y^*)$
+\section{Non- Linear Perturbations about Laminar Flow}
+After using the second non-dimensionalisation and dropping the $'$ from the pressure and temperatures the equations can be written as:
+\begin{equation}
+{{\nabla}}\cdot{\mathbf{u}_\text{total}}=0,
+\end{equation}
+\begin{equation}
+\frac{D{\mathbf{u}_\text{total}}}{D{t}}=-{\nabla} {p_\text{total}}+{Ri_bT_\text{total}} \mathbf{\hat{n}}+{\frac{1}{Re}}{\nabla}\Big({\mu_\text{total}}\big({\nabla} \mathbf{{u_\text{total}}}+({\nabla} \mathbf{{u_\text{total}}})^T\big)\Big),
+\end{equation}
+\begin{equation}
+\frac{D{T}_\text{total}}{D{t}}+{\mathbf{u}_\text{total}}\cdot \nabla {T_0}=\frac{1}{{Re }Pr} \nabla^2{T}_\text{total}.
+\end{equation}
+Decomposition of the total velocity, viscosity and temperature fields into the laminar part and perturbation about this leads to:  ($\mathbf{u}_\text{total},T_\text{total},\mu_\text{total}$)=($\mathbf{U},\overline{T},\overline{\mu}$)+($\mathbf{u},{T},{\mu}$).
+Subtracting the governing equations for the laminar flow (assuming that this is the base flow which also satisfies the governing equations) from the total flow equations leads to the perturbation equations, that are
+\begin{tcolorbox}
+\begin{align}
+\frac{\partial u_i}{\partial x_i}&=0,\label{eq:Direct_incompressibility}\\
+\frac{\partial{u_i}}{\partial{t}}+(U_j+u_j)\frac{\partial u_i}{\partial x_j} +u_j\frac{\partial U_i}{\partial x_j}&=-\frac{\partial p}{\partial x_i}+{Ri_bT}n_i+{\frac{2}{Re}}{\frac{\partial}{\partial x_j}}\Big({\mu}\big(s_{ij}+S_{ij}\big)+\mathbf{\bar{\mu}}s_{ij}\Big),\label{eq:Direct_momentum}\\
+\frac{\partial{T}}{\partial{t}}+(U_j+u_j)\frac{\partial T}{\partial x_j} +u_j\frac{\partial(\overline{T}+T_0)}{\partial x_j}&=\frac{1}{{Re }Pr} \frac{\partial^2T}{\partial x_j^2}.\label{eq:Direct_scalar}
+\end{align}
+\end{tcolorbox}
+We emphasize that these equations are not linearized and the perturbation is arbitrary.  We define the total energy as:
+\begin{equation}
+E(t)=\frac{1}{2V}\int_V \bigg(u_i(t)^2+Ri_b \frac{T(t)^2}{T_{ref}(t)^2}\bigg)\text{d}V,
+\end{equation}
+and dissipation
+\begin{equation}
+D=\frac{1}{\mathcal{T}}\int_{0}^{\mathcal{T}}\frac{1}{V}\frac{1}{Re}\int_V\Bigg[\Big((\mu+\overline{\mu})\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}+\frac{Ri_b}{Pr}\Big(\frac{1}{T_0}\Big)^2{\frac{\partial T}{\partial x}\frac{\partial T}{\partial x}}\Bigg]\text{d}V\text{d}t.
+\end{equation}
+Thereforem we can define a cost function, $\mathcal{J}$
+\begin{equation}
+\mathcal{J}(\mathcal{T})=A_1\frac{E(\mathcal{T})}{E_0}+A_2D,
+\end{equation}
+where $0\le A_1,A_2\in\mathbb{R}\le 1$.
+\begin{equation}
+E_0=\frac{1}{2}\Big\langle u_{0,i},u_{0,i}\Big\rangle+Ri_b \frac{\langle T_{0,i},T_{0,i}\rangle}{T_{ref}^2}.
+\end{equation}
+Hence, we can define a constrained functional
+\begin{align}\begin{split}
+\mathcal{L}=&\mathcal{J}(\mathcal{T})-\Bigg[\frac{\partial{u_i}}{\partial{t}}+(U_j+u_j)\frac{\partial u_i}{\partial x_j} +u_j\frac{\partial U_i}{\partial x_j}+\frac{\partial p}{\partial x_i}-{Ri_bT}n_i\\&-{\frac{2}{Re}}{\frac{\partial}{\partial x_j}}\Big({\mu}\big(s_{ij}+S_{ij}\big)+\mathbf{\bar{\mu}}s_{ij}\Big),v_i\Bigg]-\Bigg[\frac{\partial{T}}{\partial{t}}+(U_j+u_j)\frac{\partial T}{\partial x_j} +u_j\frac{\partial(\overline{T}+T_0)}{\partial x_j}-\frac{1}{{Re }Pr} \frac{\partial^2T}{\partial x_j^2},\tau\Bigg]\\&-\Bigg[\frac{\partial u_i}{\partial x_i},q\Bigg]-\langle u_i(0)-u_{0,i},v_{0,i}\rangle-\langle T(0)-T_{0},\tau_{0}\rangle-\frac{1}{2}\Big(\Big\langle u_{0,i},u_{0,i}\Big\rangle+Ri_b \frac{\langle T_{0,i},T_{0,i}\rangle}{T_{ref}^2}-E_0\Big)c.
+\end{split}\end{align}
+where,
+\begin{equation}
+[a_i,b_i]\equiv\frac{1}{\mathcal{T}}\int_{0}^{\mathcal{T}}\langle a_i,b_i \rangle\text{d}t,\hspace{0.2in}\langle a,b \rangle\equiv \frac{1}{V}\int_Va_ib_i \text{d}V,
+\end{equation}
+and the lagrange multipliers $v$, $\tau$ and $q$ are adjoint velocity, temperature and pressure, whereas $v_{0,i}$, $\tau_0$ and $c$ help enforce initial conditions and energy.
+
+We define the variation of the functional, $\mathcal{L}$, w.r.t. a particular function, $l$, as follows:
+\begin{equation}
+\frac{\delta \mathcal{L}}{\delta l}\cdot \delta l\equiv \lim\limits_{\epsilon \rightarrow 0}\frac{\mathcal{L}(l+\epsilon\delta l)-\mathcal{L}(l)}{\epsilon}.
+\end{equation}
+Variations w.r.t. the Lagrange multipliers yield `forward' equations i.e.  mass, momentum and scalar conservation of perturbation field and the initial conditions. Variations w.r.t. the forward variables i.e. $u_i$, $p$, $T$, $u_{0,1}$, $T_0$ and $E_0$ yeild the adjoint equations and corresponding initial and final conditions.
+\subsubsection*{Variation with pressure}
+\begin{equation}
+\frac{\delta \mathcal{L}}{\delta p}\cdot \delta p=-\Big[\frac{\partial( \delta p)}{\partial x_i},v_i\Big]=-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\int_Vv_i\frac{\partial( \delta p)}{\partial x_i} \text{d}V\text{d}t.
+\end{equation}
+using multidimensional equivalent of integration by parts (Lagrange- Green identity)
+\begin{align}\begin{split}
+\frac{\delta \mathcal{L}}{\delta p}\cdot \delta p&=-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_Sv_i  n_i\delta p\text{d}S-\int_V\frac{\partial v_i}{\partial x_i}\delta p\Big)\text{d}t\\&=-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_Sv_i  n_i\delta p\text{d}S\Big)\text{d}t+\Big[\frac{\partial v_i}{\partial x_i},\delta p\Big].
+\end{split}\end{align}
+\subsubsection*{Variation with velocity}
+\begin{align}\begin{split}
+&\frac{\delta \mathcal{L}}{\delta u_i}\cdot \delta u_i=\frac{1}{2}A_1(E_0)^{-1}\lim\limits_{\epsilon\rightarrow 0}\Big(\frac{1}{\epsilon}\Big\langle u_i(\mathcal{T})+\epsilon\delta u_i(\mathcal{T}),u_i(\mathcal{T})+\epsilon\delta u_ix(\mathcal{T}) \Big\rangle-\frac{1}{\epsilon}\Big\langle u_i(\mathcal{T}),u_i(\mathcal{T}) \Big\rangle\Big)\\&+A_2\lim\limits_{\epsilon\rightarrow 0}\Big(\frac{1}{\epsilon}\frac{1}{\mathcal{T}}\int_{0}^{\mathcal{T}}\frac{1}{V}\frac{1}{Re}\int_V\Bigg((\mu+\overline{\mu})\frac{\partial (u_{i}+\epsilon\delta u_i)}{\partial x_j}\frac{\partial (u_{i}+\epsilon\delta u_i)}{\partial x_j}-(\mu+\overline{\mu})\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}\Bigg)\text{d}V\text{d}t\Big)\\&-\Bigg[\frac{\partial (\delta u_i)}{\partial t}+U_j\frac{\partial (\delta u_i)}{\partial x_j}+u_j\frac{\partial (\delta u_i)}{\partial x_j},v_i\Bigg]+\Bigg[\delta u_j\frac{\partial u_i}{\partial x_j},v_i\Bigg]+\Bigg[{\frac{1}{Re}}{\frac{\partial}{\partial x_j}}\Big(({\mu}+\overline{\mu})(\frac{\partial \delta u_i}{\partial x_j}+\frac{\partial \delta u_j}{\partial x_i})\Big),v_i\Bigg]\\&-\Bigg[\delta u_j\frac{\partial (T+\overline{T}+T_0)}{\partial x_j}, \tau\Bigg]-\Bigg[\frac{\partial \delta u_i}{\partial x_i},q\Bigg]-\langle \delta u_i(0),v_{0,i}\rangle,
+\end{split}\end{align}
+
+
+\begin{align}\begin{split}
+&\frac{\delta \mathcal{L}}{\delta u_i}\cdot \delta u_i=\frac{A_1}{E_0}\Big\langle u_i(\mathcal{T}),\delta u_i(\mathcal{T}) \Big\rangle+2\frac{A_2}{Re}\bigg[(\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j},\frac{\partial (\delta u_i)}{\partial x_j}\bigg]\\&
+-\frac{1}{\mathcal{T}V}\int_V\Bigg(v_i(\mathcal{T})\delta u_i(\mathcal{T})-v_i(0)\delta u_i(0)-\int_{0}^{\mathcal{T}}\Bigg(\frac{\partial v_i}{\partial t}\delta u_i\Bigg)\Bigg)dV\\&-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S(U_j+u_j)\delta u_i v_in_j \text{d}S-\int_V\frac{\partial ((U_j+u_j)v_i)}{\partial x_j}\delta u_i \text{d}V\Big)\text{d}t+\Bigg[v_j\frac{\partial u_j}{\partial x_i},\delta u_i\Bigg]\\&-\frac{1}{\mathcal{T}V}\frac{1}{Re}\int_0^\mathcal{T}\Bigg(\oint_S({\mu}+\overline{\mu})(\frac{\partial \delta u_i}{\partial x_j}+\frac{\partial \delta u_j}{\partial x_i})v_in_j \text{d}S-\int_V\frac{\partial v_i}{\partial x_j}({\mu}+\overline{\mu})\Big(\frac{\partial \delta u_i}{\partial x_j}+\frac{\partial \delta u_j}{\partial x_i}\Big) \text{d}V\Bigg)\text{d}t\\&-\Bigg[\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i},\delta u_i\Bigg]-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\int_Vq\frac{\partial \delta u_i}{\partial x_i}\text{d}V\text{d}t-\langle \delta u_i(0),v_{0,i}\rangle,\end{split}\end{align}
+
+\begin{align}\begin{split}
+&\frac{\delta \mathcal{L}}{\delta u_i}\cdot \delta u_i=\frac{A_1}{E_0}\Big\langle u_i(\mathcal{T}),\delta u_i(\mathcal{T}) \Big\rangle+2\frac{A_2}{Re}\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S(\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}  n_j\delta u_i\text{d}S\Big)\text{d}t\\&-2\frac{A_2}{Re}\bigg[\frac{\partial}{\partial x_j}\Big((\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}\Big),\delta u_i\bigg]-\Big\langle \frac{1}{\mathcal{\mathcal{T}}}v_i(\mathcal{T}),\delta u_i(\mathcal{T})\Big\rangle+\Big\langle \frac{1}{\mathcal{\mathcal{T}}}v_i(0),\delta u_i(0)\Big\rangle+\Bigg[\frac{\partial v_i}{\partial t},\delta u_i\Bigg]+\Bigg[v_j\frac{\partial u_j}{\partial x_i},\delta u_i\Bigg]\\&-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S(U_j+u_j)\delta u_i v_in_j \text{d}S\Big)+\Bigg[\frac{\partial ((U_j+u_j)v_i)}{\partial x_j},\delta u_i\Bigg]\\&-\frac{1}{\mathcal{T}V}\frac{1}{Re}\int_0^\mathcal{T}\Bigg(\oint_\Omega\Big(({\mu}+\overline{\mu})v_in_jn_j\delta u_i+({\mu}+\overline{\mu})v_in_jn_i\delta u_j\Big) \text{d}\Omega\\&\hspace{1in}-\oint_S\Big(\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})v_in_j\Big)\delta u_i+\frac{\partial}{\partial x_i}\Big(({\mu}+\overline{\mu})v_in_j\Big)\delta u_j\Big) \text{d}S\\&-\oint_S({\mu}+\overline{\mu})\frac{\partial v_i}{\partial x_j}\Big(n_j\delta u_i+n_i\delta u_j \Big)\Big)\text{d}S+\int_V\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\frac{\partial v_i}{\partial x_j}\Big)\delta u_i+\frac{\partial}{\partial x_i}\Big(({\mu}+\overline{\mu})\frac{\partial v_i}{\partial x_j}\Big)\delta u_j \text{d}V\Bigg)\text{d}t\\&-\Bigg[\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i},\delta u_i\Bigg]
+-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Bigg(\oint_Sq\delta u_in_i\text{d}S-\int_V\frac{\partial q}{\partial x_i}\text{d}V\Bigg)\text{d}t-\langle \delta u_i(0),v_{0,i}\rangle,
+\end{split}\end{align}
+
+\begin{align}\begin{split}
+\frac{\delta \mathcal{L}}{\delta u_i}&\cdot \delta u_i=\frac{A_1}{E_0}\Big\langle u_i(\mathcal{T}),\delta u_i(\mathcal{T}) \Big\rangle\\&+2\frac{A_2}{Re}\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S(\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}  n_j\delta u_i\text{d}S\Big)\text{d}t-2\frac{A_2}{Re}\bigg[\frac{\partial}{\partial x_j}\Big((\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}\Big),\delta u_i\bigg]\\&-\Big\langle \frac{1}{\mathcal{\mathcal{T}}}v_i(\mathcal{T}),\delta u_i(\mathcal{T})\Big\rangle+\Big\langle \frac{1}{\mathcal{\mathcal{T}}}v_i(0),\delta u_i(0)\Big\rangle+\Bigg[\frac{\partial v_i}{\partial t},\delta u_i\Bigg]+\Bigg[v_j\frac{\partial u_j}{\partial x_i},\delta u_i\Bigg]\\&-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S(U_j+u_j)\delta u_i v_in_j \text{d}S\Big)+\Bigg[\frac{\partial ((U_j+u_j)v_i)}{\partial x_j},\delta u_i\Bigg]\\&-\frac{1}{\mathcal{T}V}\frac{1}{Re}\int_0^\mathcal{T}\Bigg(\oint_\Omega\Big(({\mu}+\overline{\mu})v_in_jn_j\delta u_i+({\mu}+\overline{\mu})v_in_jn_i\delta u_j\Big) \text{d}\Omega\\&\hspace{1in}-\oint_S\Big(\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})v_in_j\Big)\delta u_i+\frac{\partial}{\partial x_i}\Big(({\mu}+\overline{\mu})v_in_j\Big)\delta u_j\Big) \text{d}S\\&-\oint_S\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})v_i\Big)\Big(n_j\delta u_i+n_i\delta u_j \Big)\Big)\text{d}S\Bigg)\text{d}t\\&+\Bigg[\frac{1}{Re}\Bigg(\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\frac{\partial v_i}{\partial x_j}\Big)+\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\frac{\partial v_j}{\partial x_i}\Big)\Bigg),\delta u_i\Bigg]-\Bigg[\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i},\delta u_i\Bigg]\\&
+-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\oint_Sq\delta u_in_i\text{d}S\text{d}t+\Bigg[\frac{\partial q}{\partial x_i},\delta u_i\Bigg]-\langle v_{0,i},\delta u_i(0)\rangle.\end{split}\end{align}
+
+\subsubsection*{Variation with temperature}
+\begin{align}\begin{split}
+&\frac{\delta \mathcal{L}}{\delta T}\cdot \delta T=A_1\frac{Ri_b}{E_0T_{ref}^2}\Big\langle T(\mathcal{T}),\delta T(\mathcal{T}) \Big\rangle\\&+\frac{A_2}{Re}\bigg[\frac{\partial (\mu+\overline{\mu})}{\partial T}\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j},\delta T\bigg]+2\frac{A_2}{Re}\frac{Ri_b}{Pr}\Big(\frac{1}{T_0}\Big)^2\bigg[\frac{\partial T}{\partial x_j},\frac{\partial (\delta T)}{\partial x_j}\bigg]\\&+\bigg[Ri_bn_i\delta T,v_i\bigg]+\frac{2}{Re}\Bigg[{\frac{\partial}{\partial x_j}}\Big(\Big(\frac{\partial\mu}{\partial T}\big(s_{ij}+S_{ij}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{ij}\Big) \delta T\Big),v_i\Bigg]\\&-\Bigg[\frac{\partial{\delta T}}{\partial{t}}+(U_j+u_j)\frac{\partial \delta T}{\partial x_j} -\frac{1}{{Re }Pr} \frac{\partial^2\delta T}{\partial x_j^2},\tau\Bigg]-\langle \delta T(0),\tau_0 \rangle,
+\end{split}\end{align}
+
+where we have assumed that 
+\begin{equation}
+\lim\limits_{\epsilon\rightarrow 0}\bigg(\frac{\mu(T+\epsilon\delta T)-\mu(T)}{\epsilon}\bigg)=\frac{\partial \mu}{\partial T}\delta T.
+\end{equation}
+\begin{align}\begin{split}
+\frac{\delta \mathcal{L}}{\delta T}\cdot \delta T=&A_1\frac{Ri_b}{E_0T_{ref}^2}\Big\langle T(\mathcal{T}),\delta T(\mathcal{T}) \Big\rangle+\frac{A_2}{Re}\bigg[\frac{\partial (\mu+\overline{\mu})}{\partial T}\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j},\delta T\bigg]\\&+2\frac{A_2}{Re}\frac{Ri_b}{Pr}\Big(\frac{1}{T_{ref}}\Big)^2\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S\frac{\partial T}{\partial x_j}  n_j\delta T\text{d}S\Big)\text{d}t-2\frac{A_2}{Re}\frac{Ri_b}{Pr}\Big(\frac{1}{T_{ref}}\Big)^2\bigg[\frac{\partial}{\partial x_j}\Big(\frac{\partial T}{\partial x_j}\Big),\delta T\bigg]\\&+\bigg[Ri_bn_iv_i,\delta T\bigg]+\frac{2}{Re}\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S\Big(\frac{\partial\mu}{\partial T}\big(s_{ij}+S_{ij}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{ij}\Big)  n_j v_i\delta T\text{d}S\Big)\text{d}t\\&-\frac{2}{Re}\Bigg[\Big(\frac{\partial\mu}{\partial T}\big(s_{ij}+S_{ij}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{ij}\Big)\frac{\partial v_i}{\partial x_j}, \delta T\Bigg]-\Big\langle\frac{1}{\mathcal{T}}\tau(\mathcal{T}),\delta T(\mathcal{T}) \Big\rangle+\Big\langle\frac{1}{\mathcal{T}}\tau(0),\delta T(0) \Big\rangle\\&+\bigg[\frac{\partial \tau}{\partial t},\delta T\bigg]-\frac{1}{\mathcal{T}V}\int_0^\mathcal{T}\Big(\oint_S\tau(U_j+u_j)n_j\delta T\text{d}S\Big)\text{d}t+\bigg[\frac{\partial}{\partial x_j}((U_j+u_j)\tau),\delta T\bigg]\\&+\frac{1}{\mathcal{T}V}\frac{1}{RePr}\int_0^\mathcal{T}\Bigg(\oint_\Omega\Big(\delta T \tau n_jn_j\Big) \text{d}\Omega-\oint_S\Big(\delta T\frac{\partial(\tau n_j)}{\partial x_j}\Big) \text{d}S-\oint_S\Big(\delta Tn_j\frac{\partial\tau}{\partial x_j}\Big) \text{d}S\Bigg)\text{d}t\\&+\frac{1}{RePr}\bigg[\frac{\partial^2\tau}{\partial x_j^2},\delta T\bigg]-\langle \tau_0,\delta T(0) \rangle.
+\end{split}\end{align}
+
+\subsubsection*{Variation with $\mathbf{u_{0,i}}$}
+\begin{align}\label{eq:Adjoint_incompressibility}\begin{split}
+&\frac{\delta \mathcal{L}}{\delta u_{0,i}}\cdot \delta u_{0,i}=\langle \delta u_{0,i},v_{0,i}\rangle-\langle cu_{0,i},\delta u_{0,i} \rangle=\langle v_{0,1}-cu_{0,i},\delta u_{0,i}\rangle.
+\end{split}\end{align}
+
+\subsubsection*{Variation with $\mathbf{T_{0}}$}
+\begin{align}\begin{split}
+&\frac{\delta \mathcal{L}}{\delta T_{0}}\cdot \delta T_{0}=\langle \delta T_{0},\tau_{0}\rangle-\frac{Ri_b}{T_{ref}^2}\langle cT_{0},\delta T_{0} \rangle=\langle \tau_{0}-\frac{Ri_b}{T_{ref}^2}cT_{0},\delta \tau_{0}\rangle.
+\end{split}\end{align}
+
+\subsection{Adjoint Equations}
+At the optimal, all the variations calculated above must vanish. Therefore, time integral of both the volume and surface integral must vanish too. Former leads to the adjoint equations and one way to ensure the latter is to assume periodic perturbations followed by conditions mentioned below (which turn out to be the boundary conditions of the adjoint variables). The pure volume integrals provide the initial and final conditions for the adjoint equations.
+\subsubsection*{From Pressure Variation}
+\begin{tcolorbox}
+\begin{equation}
+\frac{\partial v_i }{\partial x_i}=0,
+\end{equation}
+and $v_i$ must be periodic, we can assume no-slip and no penetration for adjoint velocities too.
+\end{tcolorbox}
+
+\subsubsection*{From Velocity Variation}
+\begin{align}\label{eq:Adjoint_momentum}\begin{split}
+\frac{\partial v_i}{\partial t}&+v_j\frac{\partial u_j}{\partial x_i}+(U_j+u_j)\frac{\partial (v_i)}{\partial x_j}+\frac{1}{Re}\Bigg(\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\frac{\partial v_i}{\partial x_j}\Big)+\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\frac{\partial v_j}{\partial x_i}\Big)\Bigg)\\&-\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}+\frac{\partial q}{\partial x_i}-\frac{A_2}{Re}\frac{\partial}{\partial x_j}\Big((\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}\Big)=0,
+\end{split}
+\end{align}
+or,
+\begin{tcolorbox}
+\begin{align}\begin{split}
+\frac{\partial v_i}{\partial t}&+v_j\frac{\partial u_j}{\partial x_i}+\frac{\partial (v_i(U_j+u_j))}{\partial x_j}+\frac{1}{Re}\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\Big(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\Big)\Big)\\&-\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}+\frac{\partial q}{\partial x_i}-\frac{A_2}{Re}\frac{\partial}{\partial x_j}\Big((\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}\Big)=0,
+\end{split}
+\end{align}
+\begin{equation}\label{eq:Adjoint_Direct_final_velocity}
+\frac{A_1}{E_0}u_i(\mathcal{T})-\frac{1}{\mathcal{T}}v_i(\mathcal{T})=0,
+\end{equation}
+\begin{equation}\label{eq:Adjoint_Direct_initial_velocity_1}
+v_{0,i}-\frac{1}{\mathcal{T}}v_i(0)=0,
+\end{equation}
+\subsubsection*{From Temperature Variation}
+\begin{align}\label{eq:Adjoint_scalar}\begin{split}
+&\frac{\partial \tau}{\partial t}+\frac{\partial(\tau(U_j+u_j))}{\partial x_j}+\frac{1}{RePr}\frac{\partial^2\tau}{\partial x_j^2}-2A_2\frac{1}{T_{ref}^2}\frac{Ri_b}{Re Pr}\frac{\partial^2 T}{\partial x_j^2}+Ri_bn_iv_i\\&+A_2\frac{1}{Re}\frac{\partial (\mu+\overline{\mu})}{\partial T}\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{ij}+S_{ij}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{ij}\Big)\frac{\partial v_i}{\partial x_j}=0,
+\end{split}
+\end{align}
+\begin{equation}\label{eq:Adjoint_Direct_final_temperature}
+A_1\frac{Ri_b}{E_0T_{ref}^2} T(\mathcal{T})-\frac{1}{\mathcal{T}}\tau(\mathcal{T})=0,
+\end{equation}
+\begin{equation}\label{eq:Adjoint_Direct_initial_temperature_1}
+\tau_0-\frac{1}{\mathcal{T}}\tau(0)=0.
+\end{equation}
+\subsubsection*{From $\mathbf{u_{0,i}}$ Variation}
+\begin{align}\label{eq:Adjoint_Direct_initial_velocity_2}
+v_{0,i}-cu_{0,i}=0.
+\end{align}
+\subsubsection*{From $\mathbf{T_{0,i}}$ Variation}
+\begin{align}\label{eq:Adjoint_Direct_initial_temperature_2}
+\tau_{0}-\frac{Ri_b}{T_{ref}^2}cT_{0}=0.
+\end{align}
+Also, from velocity and temperature variation $q$ and $\tau$ must be periodic.
+\end{tcolorbox}
+\subsection{Algorithm}
+\begin{tcolorbox}
+\begin{itemize}
+	\item Guess the initial perturbations: $u(0)$ and $T(0)$.
+	\item Solve the `forward' equations: mass \eqref{eq:Direct_incompressibility}, momentum \eqref{eq:Direct_momentum} and temperature conservation equations \eqref{eq:Direct_scalar}.
+	\item `Initialise' the adjoint variables $v_i$ and $\tau$ at time $\mathcal{T}$ from \eqref{eq:Adjoint_Direct_final_velocity} and \eqref{eq:Adjoint_Direct_final_temperature}.\\
+	\item Back integrate the adjoint equations: mass \eqref{eq:Adjoint_incompressibility}, momentum \eqref{eq:Adjoint_momentum} and temperature conservation equations \eqref{eq:Adjoint_scalar}.
+	\item Check if the optimal constraints i.e. equations \eqref{eq:Adjoint_Direct_initial_velocity_1}, \eqref{eq:Adjoint_Direct_initial_velocity_2}, \eqref{eq:Adjoint_Direct_initial_temperature_1} and \eqref{eq:Adjoint_Direct_initial_temperature_2}. Otherwise, these provide the next guess e.g. for velocity
+	\begin{equation}
+	u_{0,i}^{(n+1)}=u_{0,i}^{(n)}+\frac{\epsilon}{c}(v_{0,i}^{n}-cu_{0,i}^{n}),
+	\end{equation}
+	and for temperature
+	\begin{equation}
+	T_{0,i}^{(n+1)}=T_{0,i}^{(n)}+\frac{\epsilon}{c}\bigg(\tau_{0}^{(n)}-\frac{Ri_b}{T_{ref}^2}cT_{0}^{(n)}\bigg).
+	\end{equation}
+	The lagrange multiplier $c$ must be chosen such that the initial energy constraint,
+	\begin{equation}
+	E_0^{(n+1)}=\frac{1}{2}\Big\langle u_{0,i}^{(n+1)},u_{0,i}^{(n+1)}\Big\rangle+Ri_b \frac{\langle T_{0,i}^{(n+1)},T_{0,i}^{(n+1)}\rangle}{T_{ref}^2}=E_0
+	\end{equation}
+	is satisfied for all iterations.
+\end{itemize}
+\end{tcolorbox}
+\subsection{Backward time}
+In order to have diffusion act in the usual fashion we evolve the adjoint equations in backward time. Hence, we define
+\begin{equation}
+t_b=\mathcal{T}-t
+\end{equation}
+Therefore,
+\begin{align}\begin{split}
+\frac{\partial v_i}{\partial t_b}=&v_j\frac{\partial u_j}{\partial x_i}+\frac{\partial (v_i(U_j+u_j))}{\partial x_j}+\frac{1}{Re}\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\Big(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\Big)\Big)\\&-\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}+\frac{\partial q}{\partial x_i}-\frac{A_2}{Re}\frac{\partial}{\partial x_j}\Big((\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}\Big),
+\end{split}
+\end{align}
+\begin{align}\begin{split}
+&\frac{\partial \tau}{\partial t_b}=\frac{\partial(\tau(U_j+u_j))}{\partial x_j}+\frac{1}{RePr}\frac{\partial^2\tau}{\partial x_j^2}-2A_2\frac{1}{T_{ref}^2}\frac{Ri_b}{Re Pr}\frac{\partial^2 T}{\partial x_j^2}+Ri_bn_iv_i\\&+A_2\frac{1}{Re}\frac{\partial (\mu+\overline{\mu})}{\partial T}\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{ij}+S_{ij}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{ij}\Big)\frac{\partial v_i}{\partial x_j}.
+\end{split}
+\end{align}
+\section{Numerical Discretisation}
+The discretisation can be done in a way similar to the forward equations with $x$ and $z$ as periodic directions and grids stretched to cluster near the walls. The variables are stored in the following manner:
+\begin{itemize}
+	\item Base grid ($j$): $v_2$
+	\item Fractional grid ($j+1/2$): $v_1$, $v_1$, $q$ and $\tau$ 
+\end{itemize}
+Each pde to be discretised is written in the form
+\begin{equation}
+\phi^{rk}=\phi^{rk-1}+\gamma_{rk}\Delta t N(\phi^{rk-1})+\zeta_{rk}\Delta t N(\phi^{rk-2})+\alpha_{rk}\Delta t\frac{A(\phi^{rk})+A(\phi^{rk-1})}{2}
+\end{equation}
+This time solve momentum equations first using same fractional steps with incompressibility correction.
+The adjoint momentum equations can be re-written as:
+\begin{align}
+\begin{split}
+\mathbf{v}^{rk}=&\mathbf{v}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{v}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{v}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{v}^{rk})+A(\mathbf{v}^{rk-1})}{2}\\&-\alpha_{rk}\Delta t\frac{\delta q^{rk-1}}{\delta x_i}-\alpha_{rk}\Delta t\frac{\delta r}{\delta x_i}
+\end{split}
+\end{align} 
+where 
+\begin{equation}
+r\mathrel{\mathop:}= q^{rk}-q^{rk-1}
+\end{equation}
+The fractional step strategy is to break the adjoint momentum equation into two distinct steps:
+\begin{equation}
+\mathbf{w}^{rk}=\mathbf{v}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{v}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{v}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{w}^{rk})+A(\mathbf{v}^{rk-1})}{2}-\alpha_{rk}\Delta t\frac{\delta q^{rk-1}}{\delta x_i}
+\end{equation} 
+with 
+\begin{equation}
+\mathbf{v}^{rk}=\mathbf{w}^{rk}-\alpha_{rk}\Delta t \nabla r,
+\end{equation}
+\begin{equation}
+\nabla\cdot(\mathbf{v}^{rk})=0=\nabla\cdot(\mathbf{w}^{rk})-\alpha_{rk}\Delta t \nabla ^2 r.
+\end{equation}
+Therefore,
+\begin{equation}
+\nabla ^2 r=\frac{1}{\alpha_{rk}\Delta t}\nabla\cdot(\mathbf{w}^{rk}),
+\end{equation}
+and update the adjoint pressure as
+\begin{equation}
+q^{rk}=q^{rk-1}+r.
+\end{equation}
+\subsection{$x$- momentum equation}
+The explicit terms are:
+\begin{align}\begin{split}
+	N(v_1^{rk})=&v_1^{rk}\frac{\partial u^{rk}}{\partial x}+v_2^{rk}\frac{\partial v^{rk}}{\partial x}+v_3^{rk}\frac{\partial w^{rk}}{\partial x}+\frac{\partial (v_1^{rk}(U^{rk}+u^{rk}))}{\partial x}+\frac{\partial (v_1^{rk}(W^{rk}+w^{rk}))}{\partial z}\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(2\frac{\partial v_1^{rk}}{\partial x}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_1^{rk}}{\partial z}+\frac{\partial v_3^{rk}}{\partial x}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_2^{rk}}{\partial x}\Big)\Big)-\tau\frac{\partial (T^{rk}+\overline{T}^{rk}+T_0^{rk})}{\partial x}
+\end{split} \end{align}	
+
+The implicit terms are:
+\begin{align}\begin{split}
+A(v_1^{rk})=&\frac{\partial (v_1^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_1^{rk}}{\partial y}\Big)\Big)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial u^{rk}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial u^{rk}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial u^{rk}}{\partial z}\Big)\Bigg)
+\end{split} \end{align}	
+
+These implicit terms have an implicit and explicit part. The implicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+A(w_1^{rk})=&\frac{\partial (w_1^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial w_1^{rk}}{\partial y}\Big)\Big)
+\end{split} \end{align}	
+The explicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+&A(v_1^{rk})=\frac{\partial (v_1^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_1^{rk}}{\partial y}\Big)\Big)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial u^{rk}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial u^{rk}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial u^{rk}}{\partial z}\Big)\Bigg)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial u^{rk+1}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial u^{rk+1}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial u^{rk+1}}{\partial z}\Big)\Bigg)
+\end{split} \end{align}	
+\subsection{$z$- momentum equation}
+The explicit terms are:
+\begin{align}\begin{split}
+N(v_3^{rk})=&v_1^{rk}\frac{\partial u^{rk}}{\partial z}+v_2^{rk}\frac{\partial v^{rk}}{\partial z}+v_3^{rk}\frac{\partial w^{rk}}{\partial z}+\frac{\partial (v_3^{rk}(U^{rk}+u^{rk}))}{\partial x}+\frac{\partial (v_3^{rk}(W^{rk}+w^{rk}))}{\partial z}\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3^{rk}}{\partial x}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_2^{rk}}{\partial z}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(2\frac{\partial v_3^{rk}}{\partial z}\Big)\Big)-\tau\frac{\partial (T^{rk}+\overline{T}^{rk}+T_0^{rk})}{\partial x}
+\end{split} \end{align}	
+The implicit terms are:
+\begin{align}\begin{split}
+A(v_3^{rk})=&\frac{\partial (v_3^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3^{rk}}{\partial y}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_1^{rk}}{\partial z}\Big)\Big)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial w^{rk}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial w^{rk}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial w^{rk}}{\partial z}\Big)\Bigg)
+\end{split} \end{align}	
+These implicit terms have an implicit and explicit part. The implicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+A(w_3^{rk})=&\frac{\partial (w_3^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk+1}+\overline{\mu}^{rk+1})\Big(\frac{\partial v_3^{rk}}{\partial y}\Big)\Big)
+\end{split} \end{align}	
+The explicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+&A(v_3^{rk})=\frac{\partial (v_3^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3^{rk}}{\partial y}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_1^{rk}}{\partial z}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk+1}+\overline{\mu}^{rk+1})\Big(\frac{\partial w_1^{rk+1}}{\partial z}\Big)\Big)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial w^{rk}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial w^{rk}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial w^{rk}}{\partial z}\Big)\Bigg)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial w^{rk+1}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial w^{rk+1}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial w^{rk+1}}{\partial z}\Big)\Bigg)
+\end{split} \end{align}	
+
+\subsection{$y$- momentum equation}
+The explicit terms are:
+\begin{align}\begin{split}
+N(v_2^{rk})=&\frac{\partial (v_2^{rk}(U^{rk}+u^{rk}))}{\partial x}+\frac{\partial (v_2^{rk}(W^{rk}+w^{rk}))}{\partial z}\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu^{rk}}+\overline{\mu}^{rk})\Big(\frac{\partial v_2}{\partial x}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu^{rk}}+\overline{\mu}^{rk})\Big(\frac{\partial v_2}{\partial z}\Big)\Big)\\&-\tau\frac{\partial (T^{rk}+\overline{T}^{rk}+T_0^{rk})}{\partial y}
+\end{split} \end{align}	
+The implicit terms are:
+\begin{align}\begin{split}
+A(v_2^{rk})=&v_1^{rk}\frac{\partial u^{rk}}{\partial y}+v_2^{rk}\frac{\partial v^{rk}}{\partial y}+v_3^{rk}\frac{\partial w^{rk}}{\partial y}+\frac{\partial (v_2^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{2}{Re}\frac{\partial}{\partial y}\Big(({\mu^{rk}}+\overline{\mu}^{rk})\Big(\frac{\partial v_2}{\partial y}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu^{rk}}+\overline{\mu}^{rk})\Big(\frac{\partial v_1}{\partial y}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3}{\partial y}\Big)\Big)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial v^{rk}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial v^{rk}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial v^{rk}}{\partial z}\Big)\Bigg)
+\end{split} \end{align}	
+These implicit terms have an implicit and explicit part. The implicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+A(w_2^{rk})=&v_2^{rk}\frac{\partial v^{rk}}{\partial y}+\frac{\partial (w_2^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{2}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial w_2}{\partial y}\Big)\Big)
+\end{split} \end{align}	
+The explicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+&A(v_2^{rk})=v_1^{rk}\frac{\partial u^{rk}}{\partial y}+v_2^{rk}\frac{\partial v^{rk}}{\partial y}+v_3^{rk}\frac{\partial w^{rk}}{\partial y}+w_1^{rk+1}\frac{\partial u^{rk+1}}{\partial y}+w_3^{rk+1}\frac{\partial w^{rk+1}}{\partial y}\\&+\frac{\partial (v_2^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{2}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_2}{\partial y}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_1}{\partial y}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3}{\partial y}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk+1}+\overline{\mu}^{rk+1})\Big(\frac{\partial w_1}{\partial y}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk+1}+\overline{\mu}^{rk+1})\Big(\frac{\partial w_3}{\partial y}\Big)\Big)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial v^{rk}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial v^{rk}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk}+\overline{\mu}^{rk})\frac{\partial v^{rk}}{\partial z}\Big)\Bigg)\\&-\frac{A_2}{Re}\Bigg(\frac{\partial}{\partial x}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial v^{rk+1}}{\partial x}\Big)+\frac{\partial}{\partial y}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial v^{rk+1}}{\partial y}\Big)+\frac{\partial}{\partial z}\Big((\mu^{rk+1}+\overline{\mu}^{rk+1})\frac{\partial v^{rk+1}}{\partial z}\Big)\Bigg)
+\end{split} \end{align}	
+
+\subsection{Adjoint Scalar Equation}
+The explicit terms are:
+\begin{align}\begin{split}
+&N(\tau^{rk})=\frac{\partial(\tau(U+u))}{\partial x}+\frac{\partial(\tau(W+w))}{\partial z}+\frac{1}{RePr}\Bigg(\frac{\partial^2\tau}{\partial x^2}+\frac{\partial^2\tau}{\partial z^2}\Bigg)
+\end{split} \end{align}
+The implicit terms are:
+\begin{align}\begin{split}
+A(\tau^{rk})=&\frac{\partial(\tau(V+v))}{\partial y}+\frac{1}{RePr}\frac{\partial^2\tau}{\partial y^2}-2A_2\frac{1}{T_{ref}^2}\frac{Ri_b}{Re Pr}\frac{\partial^2 T}{\partial x_j^2}+A_2\frac{1}{Re}\frac{\partial (\mu+\overline{\mu})}{\partial T}\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}\\&-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{11}+S_{11}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{11}\Big)\Bigg(\frac{\partial v_1}{\partial x}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{12}+S_{12}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{12}\Big)\Bigg(\frac{\partial v_2}{\partial x}+\frac{\partial v_1}{\partial y}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{13}+S_{13}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{13}\Big)\Bigg(\frac{\partial v_3}{\partial x}+\frac{\partial v_1}{\partial z}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{33}+S_{33}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{33}\Big)\frac{\partial v_3}{\partial z}\\&-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{23}+S_{23}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{23}\Big)\Bigg(\frac{\partial v_2}{\partial z}+\frac{\partial v_3}{\partial y}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{22}+S_{22}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{22}\Big)\frac{\partial v_2}{\partial y}\\&+Ri_b(n_1v_1+n_2v_2+n_3v_3)
+\end{split}
+\end{align}
+\pagebreak
+This document is based on some of the following references. The rest could be helpful in the future: \cite{kaminski2014transient,pringle2012minimal,eaves2015disruption,kaminski2017nonlinear,rabin2012triggering,winters1995available,turbulent_energy,turbulent_energy2,govindarajan2014instabilities,stratified_Instabilities,boussinesq1,marcotte2017optimal,nabi2017adjoint,notes_set,notes_set2,kundu2008fluid}
+\bibliography{Adjoint_Equations_bib}
+\bibliographystyle{vancouver}
+\end{document}

@@ -726,7 +726,7 @@ DO J = 1, NZ
     /(DYF(k))*(alpha(RK_step)/2.0_DP)*delta_t
     C(I,J,K) = (-V(I,J,K+1)/2 - mu_dbl_breve(I,J,K+1)/(Re*DY(K)) ) &
     /(DYF(k))*(alpha(RK_step)/2.0_DP)*delta_t
-    B(I,J,K) = ((-V(I,J,K+1)+V(I,J,K))/2+ mu_dbl_breve(I,J,K+1)/(Re*DY(K)) &
+    B(I,J,K) = 1.0_DP+((-V(I,J,K+1)+V(I,J,K))/2+ mu_dbl_breve(I,J,K+1)/(Re*DY(K)) &
     + mu_dbl_breve(I,J,K)/(Re*DY(K-1)))/DYF(k))*(alpha(RK_step)/2.0_DP)*delta_t
       END DO
   END DO
@@ -750,7 +750,7 @@ DO J = 1, NZ
     /(DYF(k))*(alpha(RK_step)/2.0_DP)*delta_t
     C(I,J,K) = (-V(I,J,K+1)/2 - mu_dbl_breve(I,J,K+1)/(Re*DY(K)) ) &
     /(DYF(k))*(alpha(RK_step)/2.0_DP)*delta_t
-    B(I,J,K) = ((-V(I,J,K+1)+V(I,J,K))/2+ mu_dbl_breve(I,J,K+1)/(Re*DY(K)) &
+    B(I,J,K) = 1.0_DP+((-V(I,J,K+1)+V(I,J,K))/2+ mu_dbl_breve(I,J,K+1)/(Re*DY(K)) &
     + mu_dbl_breve(I,J,K)/(Re*DY(K-1)))/DYF(k))*(alpha(RK_step)/2.0_DP)*delta_t
       END DO
   END DO
