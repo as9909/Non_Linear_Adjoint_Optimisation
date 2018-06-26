@@ -1,3 +1,6 @@
+! Run using: gfortran -I/usr/local/include fft.f90 Grid_Definition.f90
+! Channel_Solvers_BC.f90 Channel_IC.f90 Channel_Program.f90 -lfftw3 -lm -o channel
+
 PROGRAM Channel_Program
 ! Program to simulate the scalar transport equation with the assumption
 ! that velocity is known (so one way coupling), in a channel flow,
@@ -93,19 +96,22 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       TH_IC_TYPE_Y=1, TH_BC_Lower=1, TH_BC_Upper=1
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
   Kick_ini_vel=0.01_DP, Lx=2.0_DP*pi, Ly=5, Lz=2.0_DP*pi, Stretch_y=1.75_DP,&
+  n1=0.0_DP, n2=1.0_DP, n3=0.0_DP, &
    Kick_ini_temp_fluct=0.01_DP, &
     Dist_amp=0.1_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
     W_wall_upper=0.0_DP, THB_wall_lower=-5.0_DP, THB_wall_upper=1.0_DP, &
-    CFL=0.5_DP, Ri=0.25_DP, Pr=0.7_DP, Re=1000.0_DP
-REAL(KIND=DP) :: delta_t, time, time_final=10.0_DP
+    CFL=0.1_DP, Ri=0.25_DP, Pr=0.7_DP, Re=10.0_DP
+
+
+REAL(KIND=DP) :: delta_t, time, time_final=10.0_DP, T_ref=290
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
 COMPLEX(C_DOUBLE_COMPLEX),PARAMETER :: ii=(0.d0, 1.d0)
 REAL(KIND=DP), DIMENSION(1:NX) :: GX
 REAL(KIND=DP), DIMENSION(0:NY+1) :: GY, GYF
 REAL(KIND=DP), DIMENSION(1:NZ) :: GZ, kz
 REAL(KIND=DP), DIMENSION(0:NY) :: DY, DYF
-REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, THB, TH
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, P, THB, TH, mu, mu_dbl_breve
 REAL(KIND=DP), DIMENSION(1:Nx/2+1) :: kx
 type(C_PTR) :: plan_fwd, plan_bkd
 INTEGER :: I,J,K, K_Start, K_End
@@ -124,7 +130,7 @@ CALL FFT_Initialise(NX, NZ, plan_fwd, plan_bkd)
 CALL create_wavenumbers_1D( NX, NZ, Lx, Lz, kx, kz)
 ! ------------------------ Generate Grid and Initialise ------------------------
 CALL xyz_grid(Lx, Ly, Lz, Stretch_y, NX, NY, NZ, GX, GY, GYF, GZ, DY, DYF)
-CALL Initial_Conditions_velocity(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
+CALL Initial_Conditions_velocity (U_BC_Lower, U_BC_Upper, V_BC_Lower, &
 V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_upper, W_wall_lower, &
 U_wall_upper, V_wall_lower, W_wall_upper, NX, NY, NZ, Lx, Ly, Lz, kx, kz, DY, &
 DYF, plan_fwd, plan_bkd, U_bulk, Kick_ini_vel, GYF, U, V, W)
@@ -133,17 +139,28 @@ CALL Initial_Conditions_Background_Temperature( NX, NY, NZ, THB_BC_TYPE_X,&
  Lx, Ly, Lz, THB_wall_lower, THB_wall_upper, GX, GYF, GZ, THB)
 CALL Initial_Conditions_Temperature(NX, NY, NZ, TH_IC_TYPE_Y, &
     TH_BC_Lower, TH_BC_Upper,GYF,Kick_ini_temp_fluct, Dist_amp, K_Start, K_End, Ly, TH)
+CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref, DY, DYF,K_start, K_end, mu, mu_dbl_breve)
+P=0.0_DP ! Initialise pressure fluctuation with zero
+print*, delta_t, time, TH(10,10,10)
+
 ! ------------------------------------------------------------------------------
 OPEN(unit=1, file='temperature_profile.dat', status='replace')
 time = 0.0_DP
 DO WHILE (time .le. time_final)
 CALL courant( NX, NY, NZ, Lx, Ly, Lz, DYF, CFL, Ri, Pr, Re, U, V, W, &
                     THB_wall_lower, delta_t )
-CALL RK_SOLVER    ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
-   kx, kz, gamma, zeta, alpha, delta_t, plan_bkd, plan_fwd, DY, DYF, Pr, Re, Ri, U, V, W, TH, THB )
+!CALL RK_SOLVER    ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
+!   kx, kz, gamma, zeta, alpha, delta_t, plan_bkd, plan_fwd, DY, DYF, Pr, Re, Ri, U, V, W, TH, THB )
+
+CALL RK_SOLVER ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
+U_BC_Lower,U_BC_Upper, V_BC_Lower,V_BC_Upper, W_BC_Lower, W_BC_Upper, &
+kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd, DY, DYF, Pr, Re, Ri, &
+U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref, U_wall_Lower,U_wall_Upper, &
+ V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper )
+
   time=time+delta_t
   WRITE( 1,*) TH(10,10,:)
-  !print*, delta_t, time
+  print*, delta_t, time, TH(10,10,10)
 END DO
 CLOSE(1)
 CALL FFT_destroy(plan_fwd, plan_bkd)

@@ -698,8 +698,8 @@ END FORALL
 Cranck_Exp_U=Cranck_Exp_U+Ri*n1*TH
 !! ------------------------ Finishing off the v equation -----------------------
 ! IMPLICIT PART IS NOW ADDED
-V = V + delta_t * (gamma(RK_step)*Exp_V + zeta(RK_step)*Exp_V_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_V)
+!V = V + delta_t * (gamma(RK_step)*Exp_V + zeta(RK_step)*Exp_V_m1 + &
+!                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_V)
 Exp_V_m1=Exp_V
 
 DO J = 1, NZ
@@ -711,8 +711,8 @@ DO J = 1, NZ
       END DO
   END DO
 END DO
-CALL V_Boundary_Conditions(A,B,C,D,NX,NY,NZ,DYF,V_BC_Lower,V_BC_Upper,V_wall_Lower,V_wall_Upper)
-CALL Thomas_Matrix_Algorithm_real(A,B,C,V,NX,NY,NZ)
+!CALL V_Boundary_Conditions(A,B,C,D,NX,NY,NZ,DYF,V_BC_Lower,V_BC_Upper,V_wall_Lower,V_wall_Upper)
+!CALL Thomas_Matrix_Algorithm_real(A,B,C,V,NX,NY,NZ)
 !! -----------------------------------------------------------------------------
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, V, F_V )
@@ -747,12 +747,12 @@ DO J = 1, NZ
       END DO
   END DO
 END DO
-U = U + delta_t * (gamma(RK_step)*Exp_U + zeta(RK_step)*Exp_U_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_U)
-                    Exp_U_m1=Exp_U
+!U = U + delta_t * (gamma(RK_step)*Exp_U + zeta(RK_step)*Exp_U_m1 + &
+  !                  (alpha(RK_step)/2.0_DP)*Cranck_Exp_U)
+  !                  Exp_U_m1=Exp_U
 
-CALL UW_Boundary_Conditions(A,B,C,U,NX,NY,NZ,DY,U_BC_Lower,U_BC_Upper,U_wall_Lower,U_wall_Upper)
-CALL Thomas_Matrix_Algorithm_real(A,B,C,U,NX,NY,NZ)
+!CALL UW_Boundary_Conditions(A,B,C,U,NX,NY,NZ,DY,U_BC_Lower,U_BC_Upper,U_wall_Lower,U_wall_Upper)
+!CALL Thomas_Matrix_Algorithm_real(A,B,C,U,NX,NY,NZ)
 !! -----------------------------------------------------------------------------
 ! IMPLICIT PART IS NOW ADDED
 
@@ -771,16 +771,16 @@ DO J = 1, NZ
       END DO
   END DO
 END DO
-W = W + delta_t * (gamma(RK_step)*Exp_W + zeta(RK_step)*Exp_W_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_W)
-                    Exp_W_m1=Exp_W
-CALL UW_Boundary_Conditions(A,B,C,W,NX,NY,NZ,DY,W_BC_Lower,W_BC_Upper, &
-W_wall_Lower,W_wall_Upper)
-CALL Thomas_Matrix_Algorithm_real(A,B,C,W,NX,NY,NZ)
+!W = W + delta_t * (gamma(RK_step)*Exp_W + zeta(RK_step)*Exp_W_m1 + &
+!                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_W)
+  !                  Exp_W_m1=Exp_W
+!CALL UW_Boundary_Conditions(A,B,C,W,NX,NY,NZ,DY,W_BC_Lower,W_BC_Upper, &
+!W_wall_Lower,W_wall_Upper)
+!CALL Thomas_Matrix_Algorithm_real(A,B,C,W,NX,NY,NZ)
 !! -----------------------------------------------------------------------------
 alfa_t=alpha(RK_step)*delta_t
-CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
-                              plan_bkd, U, V, W, P)
+!CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
+!                              plan_bkd, U, V, W, P)
 
 END DO
 END SUBROUTINE RK_SOLVER
