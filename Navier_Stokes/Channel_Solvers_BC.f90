@@ -11,8 +11,8 @@ MODULE Channel_Solvers_BC
 ! 6. courant: gets the time step value
 ! 7. RK_SOLVER: performs the time stepping
 CONTAINS
-SUBROUTINE Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
-                              plan_bkd, U, V, W, P)
+SUBROUTINE Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, &
+                             plan_fwd, plan_bkd, U, V, W, P)
 ! -------------- This is used to remove divergence from velocity ---------------
 USE, INTRINSIC :: iso_c_binding
 USE Fourier_Spectral
@@ -78,9 +78,6 @@ DO I=1,NX/2+1
 END DO
 END DO
   CALL Thomas_Matrix_Algorithm_fft(A,B,C,Q,NX,NY,NZ)
-  !FORALL (I = 1: NX/2+1, K = 1: NY) ! Ignore the ghost cells
-  !    Q(I,J,K)=Vel_Div(I,K)
-  !END FORALL
 ! Remove Divergence from the original velocity field
 DO J = 1, NZ
   DO I = 1, NX/2+1
@@ -110,19 +107,18 @@ COMPLEX(KIND=8), INTENT(INOUT), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: D
 INTEGER :: I, J, K
 DO I = 1,NX/2+1
 DO J = 1,NZ
-  C(I,J,1) = C(I,J,1)/B(I,J,1)
-  D(I,J,1) = D(I,J,1)/B(I,J,1)
-  DO K = 2,NY ! Ignore the ghost cells
+  C(I,J,0) = C(I,J,0)/B(I,J,0)
+  D(I,J,0) = D(I,J,0)/B(I,J,0)
+  DO K = 1,NY+1 ! Don't Ignore the ghost cells
     C(I,J,K) =  C(I,J,K)/(B(I,J,K)-A(I,J,K)*C(I,J,K-1))
     D(I,J,K) =  (D(I,J,K)-A(I,J,K)*D(I,J,K-1))/(B(I,J,K)-A(I,J,K)*C(I,J,K-1))
   END DO
-  DO K = NY-1,1,-1 ! Ignore the ghost cells
+  DO K = NY,0,-1 ! Don't Ignore the ghost cells
     D(I,J,K) = D(I,J,K)-C(I,J,K)*D(I,J,K+1)
   END DO
   END DO
   END DO
 END SUBROUTINE Thomas_Matrix_Algorithm_fft
-
 SUBROUTINE Thomas_Matrix_Algorithm_real(A,B,C,D,NX,NY,NZ)
 ! -------- This is used to implement thomas algorithm for real RHS ----------
 IMPLICIT NONE
@@ -132,23 +128,22 @@ REAL(KIND=8), INTENT(INOUT), DIMENSION(1:NX,1:NZ,0:NY+1) :: A, B, C, D
 INTEGER :: I, J, K
 DO I = 1,NX
 DO J = 1,NZ
-  C(I,J,1) = C(I,J,1)/B(I,J,1)
-  D(I,J,1) = D(I,J,1)/B(I,J,1)
-  DO K = 2,NY ! Ignore the ghost cells
+  C(I,J,0) = C(I,J,0)/B(I,J,0)
+  D(I,J,0) = D(I,J,0)/B(I,J,0)
+  DO K = 1,NY+1 ! Don't Ignore the ghost cells
     C(I,J,K) =  C(I,J,K)/(B(I,J,K)-A(I,J,K)*C(I,J,K-1))
     D(I,J,K) =  (D(I,J,K)-A(I,J,K)*D(I,J,K-1))/(B(I,J,K)-A(I,J,K)*C(I,J,K-1))
   END DO
-  DO K = NY-1,1,-1 ! Ignore the ghost cells
+  DO K = NY,0,-1 ! Don't Ignore the ghost cells
     D(I,J,K) = D(I,J,K)-C(I,J,K)*D(I,J,K+1)
   END DO
 END DO
 END DO
 END SUBROUTINE Thomas_Matrix_Algorithm_real
-
 ! --------------- 4. Subroutine for velocity boundary conditions ---------------
 SUBROUTINE Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
-  V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_Lower, V_wall_Upper, W_wall_Lower, &
-   U_wall_Upper, V_wall_Lower, W_wall_Upper, NX, NY, NZ, DY, DYF, U, V, W)
+  V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_Lower, V_wall_Lower, W_wall_Lower, &
+   U_wall_Upper, V_wall_Upper, W_wall_Upper, NX, NY, NZ, DY, DYF, U, V, W)
 IMPLICIT NONE
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: U_BC_Lower, U_BC_Upper, V_BC_Lower, V_BC_Upper, &
@@ -356,7 +351,7 @@ IF (V_BC_Upper .EQ. 1) THEN
 A(I,J,NY+1)=1
 B(I,J,NY+1)=1
 C(I,J,NY+1)=0
-D(I,J,NY+1)=2*V_Upper ! Drichlet will follow from the initial condition of background
+D(I,J,NY+1)=2*V_Upper
 ELSE IF (V_BC_Upper .EQ. 2) THEN
 ! Neumann
 A(I,J,NY+1)=-1
@@ -425,12 +420,12 @@ END DO
 END DO
 END SUBROUTINE UW_Boundary_Conditions
 
-SUBROUTINE Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref, DY, DYF,K_start, K_end, mu, mu_dbl_breve)
+SUBROUTINE Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref,Delta_T_Dim, DY, DYF,K_start, K_end, mu, mu_dbl_breve)
 ! Arrhenius- Type viscosity model
 IMPLICIT NONE
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: NX, NY, NZ, K_start, K_end
-REAL(KIND=DP), INTENT(IN) :: T_ref
+REAL(KIND=DP), INTENT(IN) :: T_ref,Delta_T_Dim
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN) :: TH, THB
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) :: T_total
 REAL (KIND=DP), DIMENSION(0:NY), INTENT(IN)  :: DY, DYF
@@ -439,7 +434,7 @@ REAL(KIND=DP) :: a=-2.10_DP, b=-4.45_DP, c=6.55_DP ! Model Paramaters
 INTEGER :: I, J, K
 ! make temperature dimensional and then divide by reference temperature (input)
 FORALL (I=1:NX, J=1:NZ, K=0:NY+1)
-T_Total(I,J,K)=(TH(I,J,K)+THB(I,J,K))*(THB(I,J,NY)-THB(I,J,1))/T_ref
+T_Total(I,J,K)=(TH(I,J,K)+THB(I,J,K))*Delta_T_Dim/T_ref
 mu(I,J,K) = EXP(a + b/T_Total(I,J,K) + c/T_Total(I,J,K)**2)
 END FORALL
 FORALL  (I=1:NX, J=1:NZ, K=K_start:K_end)
@@ -493,7 +488,7 @@ SUBROUTINE RK_SOLVER ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
 U_BC_Lower,U_BC_Upper, V_BC_Lower,V_BC_Upper, W_BC_Lower, W_BC_Upper, &
 kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd,&
  DY, DYF, Pr, Re, Ri, &
-U, V, W,P, TH,  THB,mu, mu_dbl_breve, T_ref, U_wall_Lower,U_wall_Upper, &
+U, V, W,P, TH,  THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upper, &
  V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper )
 ! --------------- This is used to time step relevant equations -----------------
 USE, INTRINSIC :: iso_c_binding
@@ -518,7 +513,7 @@ REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT) :: U, V, W, TH, P, 
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN)    :: THB
 REAL(KIND=DP), DIMENSION (0:NY+1), INTENT(IN) :: DY, DYF
 REAL(KIND=DP), DIMENSION (1:3), INTENT(IN) :: gamma, zeta, alpha
-REAL(KIND=DP), INTENT(IN) :: delta_t, Lx, Lz, n1, n2, n3,Pr, Re, Ri, T_ref, &
+REAL(KIND=DP), INTENT(IN) :: delta_t, Lx, Lz, n1, n2, n3,Pr, Re, Ri, T_ref,Delta_T_Dim, &
   U_wall_Lower,U_wall_Upper, V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper
 REAL(KIND=DP) :: alfa_t
 type(C_PTR), INTENT(IN) :: plan_bkd, plan_fwd
@@ -535,9 +530,11 @@ DO RK_step = 1,3
 ! 1. 1st solve the temperature equation
 F_Exp_TH(1:NX/2+1,1:NZ,0:NY+1)=(0.0_DP, 0.0_DP)
 THpTHB=TH+THB
+THpTHB_Int=0.0_DP ! Must Initialise all variables
+U_THpTHB=0.0_DP
+W_THpTHB=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
-  THpTHB_Int(I,J,K)=(THpTHB(I,J,K+1)*DYF(K)+THpTHB(I,J,K)*DYF(K+1))/(2*DY(K)) ! \breve\breve(T+To)
-  ! TH_Int(I,J,K)=(TH(I,J,K+1)*DYF(K)+TH(I,J,K)*DYF(K+1))/(2*DY(K)) ! \breve\breve(T)
+  THpTHB_Int(I,J,K)=(THpTHB(I,J,K-1)*DYF(K)+THpTHB(I,J,K)*DYF(K-1))/(2*DY(K-1)) ! \breve\breve(T+To)
   U_THpTHB(I,J,K)=U(I,J,K)*THpTHB(I,J,K)
   W_THpTHB(I,J,K)=W(I,J,K)*THpTHB(I,J,K)
 END FORALL
@@ -549,23 +546,26 @@ F_Exp_TH(I,J,K) = -1*ii*kx(I)*F_UTH(I,J,K)-1*ii*kz(J)*F_WTH(I,J,K) + &
                   -1/(Pr*Re)*(kx(I)**2+kz(J)**2)*F_TH(I,J,K)
 END FORALL
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Exp_TH, Exp_Th )
-
+Exp_Th=0.0_DP
+Cranck_Exp_Th=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
-  Exp_Th(I,J,K) = -1*(THpTHB_Int(I,J,K+1)*V(I,J,K+1) &
-                  -THpTHB_Int(I,J,K)*V(I,J,K))/DYF(K)+Exp_Th(I,J,K)
-  Cranck_Exp_Th(I,J,K) = 1/(Pr*Re*DYF(K))*((TH(I,J,K+1)-TH(I,J,K))/DY(K)-(TH(I,J,K)-TH(I,J,K-1))/DY(K-1))
+Exp_Th(I,J,K) = -1*(THpTHB_Int(I,J,K+1)*V(I,J,K+1) &
+                -THpTHB_Int(I,J,K)*V(I,J,K))/DYF(K)+Exp_Th(I,J,K)
+Cranck_Exp_Th(I,J,K) = 1/(Pr*Re*DYF(K))*((TH(I,J,K+1)-TH(I,J,K))/DY(K) &
+                -(TH(I,J,K)-TH(I,J,K-1))/DY(K-1))
 END FORALL
-
+U_breve=0.0_DP
+W_breve=0.0_DP
+Uy=0.0_DP
+Wy=0.0_DP
 ! 2. Solve the y- velocity
 FORALL (I=1:NX, J=1:NZ, K=1:NY+1)
   ! U and W interpolated at the base grid (quasi second order)
   U_breve(I,J,K)= (U(I,J,K)*DYF(K)+U(I,J,K-1)*DYF(K-1))/(2*DY(K-1))
   W_breve(I,J,K)= (W(I,J,K)*DYF(K)+W(I,J,K-1)*DYF(K-1))/(2*DY(K-1))
-
   ! U and W wall normal gradients at the base grid
   Uy(I,J,K)=(U(I,J,K)-U(I,J,K-1))/DY(K-1)
   Wy(I,J,K)=(W(I,J,K)-W(I,J,K-1))/DY(K-1)
-
 END FORALL
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, V, F_V )
@@ -575,13 +575,10 @@ FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
 END FORALL
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vx, Vx )
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vz, Vz )
-
 MU_Uy_p_Vx=(Uy+Vx)*mu_dbl_breve
 MU_Wy_p_Vz=(Wy+Vz)*mu_dbl_breve
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, MU_Uy_p_Vx, F_MU_Uy_p_Vx )
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, MU_Wy_p_Vz, F_MU_Wy_p_Vz )
-
-
 UV=U_breve*V
 VW=V*W_breve
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, UV, F_UV )
@@ -591,19 +588,16 @@ FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
   F_Exp_V(I,J,K)=ii*((kx(I)*F_MU_Uy_p_Vx(I,J,K)+kz(J)*F_MU_Wy_p_Vz(I,J,K))/Re &
     -(kx(I)*F_UV(I,J,K)+kz(J)*F_VW(I,J,K)))
 END FORALL
-
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Exp_V, Exp_V )
-
+Cranck_Exp_V=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
 ! Adding the temperature, y laplacian and the explicit pressure gradient
-  Cranck_Exp_V(I,J,K) = Ri*n2*(TH(I,J,K+1)*DYF(K)+TH(I,J,K)*DYF(K+1))/(2*DY(K)) + &
-  2/(Re*DY(K-1))*(  mu(I,J,K)*(V(I,J,K+1)-V(I,J,K))/DYF(K)    &
+  Cranck_Exp_V(I,J,K) = Ri*n2*(TH(I,J,K-1)*DYF(K)+TH(I,J,K)*DYF(K-1))/(2.0_DP*DY(K-1)) + &
+  2.0_DP/(Re*DY(K-1))*(mu(I,J,K)*(V(I,J,K+1)-V(I,J,K))/DYF(K)    &
   - mu(I,J,K-1)*(V(I,J,K)-V(I,J,K-1))/DYF(K-1)  )   &
   -(P(I,J,K)-P(I,J,K-1))/DY(K-1)
 END FORALL
-
 ! 3. Solve u and w - equation
-
 UU = U*U
 UW = U*W
 WW = W*W
@@ -639,41 +633,32 @@ CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, MU_Uz_p_Wx, F_MU_Uz_p_Wx )
 FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
 F_Exp_U(I,J,K) = ii*(-kz(J)*F_UW(I,J,K) - kx(I)*F_UU(I,J,K) &
                 + (kx(I)*F_MU_Ux(I,J,K) + kz(J)*F_MU_Uz_p_Wx(I,J,K))/Re)
-
 F_Exp_W(I,J,K) = ii*(-kx(I)*F_UW(I,J,K) - kz(J)*F_WW(I,J,K) &
               + (kz(J)*F_MU_Wz(I,J,K) + kx(I)*F_MU_Uz_p_Wx(I,J,K))/Re)
 END FORALL
-
-
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Exp_U, Exp_U )
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Exp_W, Exp_W )
-
-
+Cranck_Exp_U=0.0_DP
+Cranck_Exp_W=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
 Cranck_Exp_U(I,J,K) = (1/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)  - &
       mu_dbl_breve(I,J,K)*Vx(I,J,K))/DYF(K) - ((U(I,J,K+1)+U(I,J,K))*V(I,J,K+1) - &
       (U(I,J,K) + U(I,J,K-1))*V(I,J,K))/(2.0_DP*DYF(K)) + Ri*n1*TH(I,J,K) + &
-(mu_dbl_breve(I,J,K+1)*(U(I,J,K+1)-U(I,J,K))/DY(K) &
-- mu_dbl_breve(I,J,K+1)*(U(I,J,K)-U(I,J,K-1))/DY(K-1))/(Re*DYF(K)) &
--Px(I,J,K)
-
+      (mu_dbl_breve(I,J,K+1)*(U(I,J,K+1)-U(I,J,K))/DY(K) &
+      - mu_dbl_breve(I,J,K+1)*(U(I,J,K)-U(I,J,K-1))/DY(K-1))/(Re*DYF(K)) &
+      -Px(I,J,K)
 Cranck_Exp_W(I,J,K) = (1/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)  - &
       mu_dbl_breve(I,J,K)*Vz(I,J,K))/DYF(K) - ((W(I,J,K+1)+W(I,J,K))*V(I,J,K+1) - &
       (W(I,J,K) + W(I,J,K-1))*V(I,J,K))/(2.0_DP*DYF(K)) + Ri*n3*TH(I,J,K) + &
       (mu_dbl_breve(I,J,K+1)*(W(I,J,K+1)-W(I,J,K))/DY(K) &
       - mu_dbl_breve(I,J,K+1)*(W(I,J,K)-W(I,J,K-1))/DY(K-1))/(Re*DYF(K))&
       -Pz(I,J,K)
-
-
 END FORALL
-
-
-
 !! ------------------- Finishing off the temperature equation ------------------
 ! IMPLICIT PART IS NOW ADDED
-TH = TH+delta_t*(gamma(RK_step)*Exp_Th + zeta(RK_step)*Exp_TH_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_Th)
-Exp_TH_m1=Exp_TH
+A=0.0_DP
+B=0.0_DP
+C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
     DO K = K_Start, K_End
@@ -683,38 +668,40 @@ DO J = 1, NZ
   END DO
 END DO
 B = - A - C + 1.0_DP
+TH = TH+delta_t*(gamma(RK_step)*Exp_Th + zeta(RK_step)*Exp_TH_m1 + &
+                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_Th)
+Exp_TH_m1=Exp_TH
 CALL Scalar_Boundary_Conditions(A,B,C,TH,NX,NY,NZ,TH_BC_Lower,TH_BC_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,TH,NX,NY,NZ)
 !! -----------------------------------------------------------------------------
 ! Obtain the Viscosity from the temperature
-CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref, DY, DYF,K_start, K_end, mu, mu_dbl_breve)
-
+CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref,Delta_T_Dim, DY, DYF,K_start, K_end, mu, mu_dbl_breve)
 
 ! We already know TH at new time step, therefore we can keep it on the right
 FORALL  (I=1:NX, J=1:NZ, K=K_start:K_end)
-Cranck_Exp_V(I,J,K)=Cranck_Exp_V(I,J,K)+Ri*n2*(TH(I,J,K+1)*DYF(K)+TH(I,J,K)*DYF(K+1))/(2.0_DP*DY(K))
-
+Cranck_Exp_V(I,J,K)=Cranck_Exp_V(I,J,K)+Ri*n2*(TH(I,J,K-1)*DYF(K)+TH(I,J,K)*DYF(K-1))/(2.0_DP*DY(K-1))
 END FORALL
 Cranck_Exp_U=Cranck_Exp_U+Ri*n1*TH
+Cranck_Exp_W=Cranck_Exp_W+Ri*n3*TH
 !! ------------------------ Finishing off the v equation -----------------------
 ! IMPLICIT PART IS NOW ADDED
-V = V + delta_t * (gamma(RK_step)*Exp_V + zeta(RK_step)*Exp_V_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_V)
-Exp_V_m1=Exp_V
-
+A=0.0_DP
+B=0.0_DP
+C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
-    DO K = K_Start, K_End
-    A(I,J,K) = -2.0_DP*((V(I,J,K-1)+1/Re*mu(I,J,K-1)/DYF(K-1))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
-    C(I,J,K) = 2.0_DP*((V(I,J,K+1)-1/Re*mu(I,J,K)/DYF(K))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
-    B(I,J,K) = 1.0_DP+2.0_DP/Re*(mu(I,J,K)/DYF(K)+mu(I,J,K+1)/DYF(K+1))/DY(K-1)*(alpha(RK_step)/2.0_DP)*delta_t
+    DO K = 0, Ny+1
+    A(I,J,K) = 0!-2.0_DP*((V(I,J,K-1)/2+1/Re*mu(I,J,K-1)/DYF(K-1))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+    C(I,J,K) = 0!2.0_DP*((V(I,J,K+1)/2-1/Re*mu(I,J,K)/DYF(K))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+    B(I,J,K) = 1.0_DP!+2.0_DP/Re*(mu(I,J,K)/DYF(K)+mu(I,J,K-1)/DYF(K-1))/DY(K-1)*(alpha(RK_step)/2.0_DP)*delta_t
       END DO
   END DO
 END DO
-CALL V_Boundary_Conditions(A,B,C,D,NX,NY,NZ,DYF,V_BC_Lower,V_BC_Upper,V_wall_Lower,V_wall_Upper)
+V = V + delta_t * (gamma(RK_step)*Exp_V + zeta(RK_step)*Exp_V_m1 + (alpha(RK_step)/2.0_DP)*Cranck_Exp_V)
+Exp_V_m1=Exp_V
+CALL V_Boundary_Conditions(A,B,C,V,NX,NY,NZ,DYF,V_BC_Lower,V_BC_Upper,V_wall_Lower,V_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,V,NX,NY,NZ)
 !! -----------------------------------------------------------------------------
-
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, V, F_V )
 FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
   F_Vx(I,J,K)=ii*kx(I)*F_V(I,J,K)
@@ -724,16 +711,16 @@ CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vx, Vx )
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vz, Vz )
 
 FORALL  (I=1:NX, J=1:NZ, K=K_start:K_end)
-Cranck_Exp_U(I,J,K)=Cranck_Exp_U(I,J,K)+(1/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)  - &
-      mu_dbl_breve(I,J,K)*Vx(I,J,K))/DYF(K)
-
-Cranck_Exp_W(I,J,K)=Cranck_Exp_W(I,J,K)+(1/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)  - &
-      mu_dbl_breve(I,J,K)*Vz(I,J,K))/DYF(K)
-
+Cranck_Exp_U(I,J,K)=Cranck_Exp_U(I,J,K)+(1/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)&
+      - mu_dbl_breve(I,J,K)*Vx(I,J,K))/DYF(K)
+Cranck_Exp_W(I,J,K)=Cranck_Exp_W(I,J,K)+(1/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)&
+      - mu_dbl_breve(I,J,K)*Vz(I,J,K))/DYF(K)
 END FORALL
-
 !! ------------------------ Finishing off the u equation -----------------------
 ! IMPLICIT PART IS NOW ADDED
+A=0.0_DP
+B=0.0_DP
+C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
     DO K = K_Start, K_End
@@ -747,18 +734,15 @@ DO J = 1, NZ
       END DO
   END DO
 END DO
-U = U + delta_t * (gamma(RK_step)*Exp_U + zeta(RK_step)*Exp_U_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_U)
-                    Exp_U_m1=Exp_U
-
+U = U + delta_t * (gamma(RK_step)*Exp_U + zeta(RK_step)*Exp_U_m1 +(alpha(RK_step)/2.0_DP)*Cranck_Exp_U)
+                   Exp_U_m1=Exp_U
 CALL UW_Boundary_Conditions(A,B,C,U,NX,NY,NZ,DY,U_BC_Lower,U_BC_Upper,U_wall_Lower,U_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,U,NX,NY,NZ)
-!! -----------------------------------------------------------------------------
-! IMPLICIT PART IS NOW ADDED
-
-
 !! ------------------------ Finishing off the w equation -----------------------
 ! IMPLICIT PART IS NOW ADDED
+A=0.0_DP
+B=0.0_DP
+C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
     DO K = K_Start, K_End
@@ -771,18 +755,14 @@ DO J = 1, NZ
       END DO
   END DO
 END DO
-W = W + delta_t * (gamma(RK_step)*Exp_W + zeta(RK_step)*Exp_W_m1 + &
-                    (alpha(RK_step)/2.0_DP)*Cranck_Exp_W)
+W = W + delta_t * (gamma(RK_step)*Exp_W + zeta(RK_step)*Exp_W_m1 + (alpha(RK_step)/2.0_DP)*Cranck_Exp_W)
                     Exp_W_m1=Exp_W
-CALL UW_Boundary_Conditions(A,B,C,W,NX,NY,NZ,DY,W_BC_Lower,W_BC_Upper, &
-W_wall_Lower,W_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,W,NX,NY,NZ,DY,W_BC_Lower,W_BC_Upper,W_wall_Lower,W_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,W,NX,NY,NZ)
 !! -----------------------------------------------------------------------------
 alfa_t=alpha(RK_step)*delta_t
 CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
-                              plan_bkd, U, V, W, P)
-
+                       plan_bkd, U, V, W, P)
 END DO
 END SUBROUTINE RK_SOLVER
-
 END MODULE Channel_Solvers_BC

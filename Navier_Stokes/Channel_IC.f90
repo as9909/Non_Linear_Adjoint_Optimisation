@@ -64,13 +64,13 @@ V(:,:,NY+1)=0.0_DP
 W(:,:,0)=0.0_DP
 W(:,:,NY+1)=0.0_DP
 CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
-V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_upper, W_wall_lower, &
-U_wall_upper, V_wall_lower, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
+  V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_Lower, V_wall_Lower, W_wall_Lower, &
+   U_wall_Upper, V_wall_Upper, W_wall_Upper, NX, NY, NZ, DY, DYF, U, V, W)
 CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
                               plan_bkd, U, V, W, P)
 CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
-V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_upper, W_wall_lower, &
-U_wall_upper, V_wall_lower, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
+V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_Lower, W_wall_lower, &
+U_wall_upper, V_wall_Upper, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
 END SUBROUTINE Initial_Conditions_velocity
 
 ! ------------ 2. Subroutine for initialising background temperature -----------
@@ -228,5 +228,27 @@ END DO
 END DO
 END DO
 END SUBROUTINE Initial_Conditions_Temperature
+
+! ----------- 3. Subroutine for initialising fluctuating temperature -----------
+SUBROUTINE Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp, P)
+IMPLICIT NONE
+
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
+INTEGER :: I, J, K
+INTEGER, DIMENSION(:), ALLOCATABLE :: seed
+REAL(KIND=DP) :: Rand_num
+REAL(KIND=DP), INTENT(IN) :: Kick_Dist_amp
+INTEGER, INTENT(IN) :: NX, NY, NZ
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(OUT) :: P
+CALL RANDOM_SEED
+DO I  = 1,NX
+  DO J = 1, NZ
+    DO K = 0, NY+1
+      CALL RANDOM_NUMBER( Rand_num )
+      P(I,J,K) = Kick_Dist_amp * (Rand_num-0.5_DP)
+    END DO
+  END DO
+END DO
+END SUBROUTINE Initial_Conditions_Pressure
 
 END MODULE Channel_IC
