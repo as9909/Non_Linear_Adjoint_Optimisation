@@ -691,9 +691,9 @@ C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
     DO K = 0, Ny+1
-    A(I,J,K) = 0!-2.0_DP*((V(I,J,K-1)/2+1/Re*mu(I,J,K-1)/DYF(K-1))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
-    C(I,J,K) = 0!2.0_DP*((V(I,J,K+1)/2-1/Re*mu(I,J,K)/DYF(K))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
-    B(I,J,K) = 1.0_DP!+2.0_DP/Re*(mu(I,J,K)/DYF(K)+mu(I,J,K-1)/DYF(K-1))/DY(K-1)*(alpha(RK_step)/2.0_DP)*delta_t
+    A(I,J,K) = -2.0_DP*((V(I,J,K-1)/2+1/Re*mu(I,J,K-1)/DYF(K-1))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+    C(I,J,K) = 2.0_DP*((V(I,J,K+1)/2-1/Re*mu(I,J,K)/DYF(K))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+    B(I,J,K) = 1.0_DP+2.0_DP/Re*(mu(I,J,K)/DYF(K)+mu(I,J,K-1)/DYF(K-1))/DY(K-1)*(alpha(RK_step)/2.0_DP)*delta_t
       END DO
   END DO
 END DO

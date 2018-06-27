@@ -1,6 +1,5 @@
 ! Run using: gfortran -I/usr/local/include fft.f90 Grid_Definition.f90
 ! Channel_Solvers_BC.f90 Channel_IC.f90 Channel_Program.f90 -lfftw3 -lm -o channel
-
 PROGRAM Channel_Program
 ! Program to simulate the scalar transport equation with the assumption
 ! that velocity is known (so one way coupling), in a channel flow,
@@ -93,14 +92,14 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       W_BC_Lower=1, W_BC_Upper=1, THB_BC_TYPE_X=1, &
                       THB_BC_TYPE_Y=1, THB_BC_TYPE_Z=1, THB_BC_Lower=1, &
                       THB_BC_Upper=1, Hydro_Background=1,&
-                      TH_IC_TYPE_Y=1, TH_BC_Lower=1, TH_BC_Upper=1
+                      TH_IC_TYPE_Y=2, TH_BC_Lower=1, TH_BC_Upper=1
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
-  Kick_ini_vel=0.01_DP, Lx=2.0_DP*pi, Ly=5, Lz=2.0_DP*pi, Stretch_y=1.75_DP,&
-  n1=0.0_DP, n2=0.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.01_DP, &
-    Dist_amp=0.1_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
+  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=5, Lz=2.0_DP*pi, Stretch_y=1.75_DP,&
+  n1=0.0_DP, n2=0.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.0_DP, &
+    Dist_amp=1_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
-    W_wall_upper=0.0_DP, THB_wall_lower=5.0_DP, THB_wall_upper=10.0_DP, &
-    CFL=0.25_DP, Ri=0.25_DP, Pr=0.7_DP, Re=1000.0_DP, Kick_Dist_amp_P=0.0_DP
+    W_wall_upper=0.0_DP, THB_wall_lower=15.0_DP, THB_wall_upper=10.0_DP, &
+    CFL=0.25_DP, Ri=0.25_DP, Pr=7_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP
 REAL(KIND=DP) :: delta_t, time, time_final=10.0_DP, T_ref=290.0_DP,&
                  Delta_T_Dim=270.0_DP
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
@@ -157,7 +156,7 @@ U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upp
   time=time+delta_t
   WRITE(1,*) TH(10,10,:)+THB(10,10,:)
   WRITE(2,*) U(10,10,:)
-  print*, delta_t, time, maxval(TH), maxval(U), maxval(V), maxval(W)
+  print*, delta_t, time, maxval(TH), maxval(U), maxval(V), maxval(W), maxval(P)
 END DO
 CLOSE(1)
 CLOSE(2)
