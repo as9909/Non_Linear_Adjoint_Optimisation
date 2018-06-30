@@ -158,6 +158,9 @@ U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upp
   WRITE(2,*) U(10,10,:)
   print*, delta_t, time, maxval(TH), maxval(U), maxval(V), maxval(W), maxval(P)
 END DO
+%% Initialise adjoint velocity
+
+
 CLOSE(1)
 CLOSE(2)
 CLOSE(3)

@@ -140,6 +140,7 @@ DO J = 1,NZ
 END DO
 END DO
 END SUBROUTINE Thomas_Matrix_Algorithm_real
+
 ! --------------- 4. Subroutine for velocity boundary conditions ---------------
 SUBROUTINE Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
   V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_Lower, V_wall_Lower, W_wall_Lower, &
@@ -595,7 +596,7 @@ FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
   Cranck_Exp_V(I,J,K) = Ri*n2*(TH(I,J,K-1)*DYF(K)+TH(I,J,K)*DYF(K-1))/(2.0_DP*DY(K-1)) + &
   2.0_DP/(Re*DY(K-1))*(mu(I,J,K)*(V(I,J,K+1)-V(I,J,K))/DYF(K)    &
   - mu(I,J,K-1)*(V(I,J,K)-V(I,J,K-1))/DYF(K-1)  )   &
-  -(P(I,J,K)-P(I,J,K-1))/DY(K-1)
+  -2.0_DP*(P(I,J,K)-P(I,J,K-1))/DY(K-1)
 END FORALL
 ! 3. Solve u and w - equation
 UU = U*U
@@ -646,13 +647,13 @@ Cranck_Exp_U(I,J,K) = (1/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)  - &
       (U(I,J,K) + U(I,J,K-1))*V(I,J,K))/(2.0_DP*DYF(K)) + Ri*n1*TH(I,J,K) + &
       (mu_dbl_breve(I,J,K+1)*(U(I,J,K+1)-U(I,J,K))/DY(K) &
       - mu_dbl_breve(I,J,K+1)*(U(I,J,K)-U(I,J,K-1))/DY(K-1))/(Re*DYF(K)) &
-      -Px(I,J,K)
+      -2.0_DP*Px(I,J,K)
 Cranck_Exp_W(I,J,K) = (1/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)  - &
       mu_dbl_breve(I,J,K)*Vz(I,J,K))/DYF(K) - ((W(I,J,K+1)+W(I,J,K))*V(I,J,K+1) - &
       (W(I,J,K) + W(I,J,K-1))*V(I,J,K))/(2.0_DP*DYF(K)) + Ri*n3*TH(I,J,K) + &
       (mu_dbl_breve(I,J,K+1)*(W(I,J,K+1)-W(I,J,K))/DY(K) &
       - mu_dbl_breve(I,J,K+1)*(W(I,J,K)-W(I,J,K-1))/DY(K-1))/(Re*DYF(K))&
-      -Pz(I,J,K)
+      -2.0_DP*Pz(I,J,K)
 END FORALL
 !! ------------------- Finishing off the temperature equation ------------------
 ! IMPLICIT PART IS NOW ADDED

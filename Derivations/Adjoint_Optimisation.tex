@@ -529,7 +529,7 @@ This time solve momentum equations first using same fractional steps with incomp
 The adjoint momentum equations can be re-written as:
 \begin{align}
 \begin{split}
-\mathbf{v}^{rk}=&\mathbf{v}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{v}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{v}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{v}^{rk})+A(\mathbf{v}^{rk-1})}{2}\\&-\alpha_{rk}\Delta t\frac{\delta q^{rk-1}}{\delta x_i}-\alpha_{rk}\Delta t\frac{\delta r}{\delta x_i}
+{v_i}^{rk}=&{v_i}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{v}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{v}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{v}^{rk})+A(\mathbf{v}^{rk-1})}{2}\\&+\alpha_{rk}\Delta t\frac{\delta q^{rk-1}}{\delta x_i}+\alpha_{rk}\Delta t\frac{\delta r}{\delta x_i}
 \end{split}
 \end{align} 
 where 
@@ -538,18 +538,18 @@ r\mathrel{\mathop:}= q^{rk}-q^{rk-1}
 \end{equation}
 The fractional step strategy is to break the adjoint momentum equation into two distinct steps:
 \begin{equation}
-\mathbf{w}^{rk}=\mathbf{v}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{v}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{v}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{w}^{rk})+A(\mathbf{v}^{rk-1})}{2}-\alpha_{rk}\Delta t\frac{\delta q^{rk-1}}{\delta x_i}
+{w_i}^{rk}={v_i}^{rk-1}+\gamma_{rk}\Delta t N(\mathbf{v}^{rk-1})+\zeta_{rk}\Delta t N(\mathbf{v}^{rk-2})+\alpha_{rk}\Delta t\frac{A(\mathbf{w}^{rk})+A(\mathbf{v}^{rk-1})}{2}+\alpha_{rk}\Delta t\frac{\delta q^{rk-1}}{\delta x_i}
 \end{equation} 
 with 
 \begin{equation}
-\mathbf{v}^{rk}=\mathbf{w}^{rk}-\alpha_{rk}\Delta t \nabla r,
+\mathbf{v}^{rk}=\mathbf{w}^{rk}+\alpha_{rk}\Delta t \nabla r,
 \end{equation}
 \begin{equation}
-\nabla\cdot(\mathbf{v}^{rk})=0=\nabla\cdot(\mathbf{w}^{rk})-\alpha_{rk}\Delta t \nabla ^2 r.
+\nabla\cdot(\mathbf{v}^{rk})=0=\nabla\cdot(\mathbf{w}^{rk})+\alpha_{rk}\Delta t \nabla ^2 r.
 \end{equation}
 Therefore,
 \begin{equation}
-\nabla ^2 r=\frac{1}{\alpha_{rk}\Delta t}\nabla\cdot(\mathbf{w}^{rk}),
+\nabla ^2 r=-\frac{1}{\alpha_{rk}\Delta t}\nabla\cdot(\mathbf{w}^{rk}),
 \end{equation}
 and update the adjoint pressure as
 \begin{equation}
@@ -577,7 +577,7 @@ The explicit Crank- Nicholson part is:
 \subsection{$z$- momentum equation}
 The explicit terms are:
 \begin{align}\begin{split}
-N(v_3^{rk})=&v_1^{rk}\frac{\partial u^{rk}}{\partial z}+v_2^{rk}\frac{\partial v^{rk}}{\partial z}+v_3^{rk}\frac{\partial w^{rk}}{\partial z}+\frac{\partial (v_3^{rk}(U^{rk}+u^{rk}))}{\partial x}+\frac{\partial (v_3^{rk}(W^{rk}+w^{rk}))}{\partial z}\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3^{rk}}{\partial x}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_2^{rk}}{\partial z}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(2\frac{\partial v_3^{rk}}{\partial z}\Big)\Big)-\tau\frac{\partial (T^{rk}+\overline{T}^{rk}+T_0^{rk})}{\partial x}
+N(v_3^{rk})=&v_1^{rk}\frac{\partial u^{rk}}{\partial z}+v_2^{rk}\frac{\partial v^{rk}}{\partial z}+v_3^{rk}\frac{\partial w^{rk}}{\partial z}+\frac{\partial (v_3^{rk}(U^{rk}+u^{rk}))}{\partial x}+\frac{\partial (v_3^{rk}(W^{rk}+w^{rk}))}{\partial z}\\&+\frac{1}{Re}\frac{\partial}{\partial x}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_3^{rk}}{\partial x}\Big)\Big)+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial v_2^{rk}}{\partial z}\Big)\Big)\\&+\frac{1}{Re}\frac{\partial}{\partial z}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(2\frac{\partial v_3^{rk}}{\partial z}\Big)\Big)-\tau\frac{\partial (T^{rk}+\overline{T}^{rk}+T_0^{rk})}{\partial z}
 \end{split} \end{align}	
 The implicit terms are:
 \begin{align}\begin{split}
@@ -585,7 +585,7 @@ A(v_3^{rk})=&\frac{\partial (v_3^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\
 \end{split} \end{align}	
 These implicit terms have an implicit and explicit part. The implicit Crank- Nicholson part is:
 \begin{align}\begin{split}
-A(w_3^{rk})=&\frac{\partial (w_3^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk+1}+\overline{\mu}^{rk+1})\Big(\frac{\partial v_3^{rk}}{\partial y}\Big)\Big)
+A(w_3^{rk})=&\frac{\partial (w_3^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{Re}\frac{\partial}{\partial y}\Big(({\mu}^{rk}+\overline{\mu}^{rk})\Big(\frac{\partial w_3^{rk}}{\partial y}\Big)\Big)
 \end{split} \end{align}	
 The explicit Crank- Nicholson part is:
 \begin{align}\begin{split}
@@ -620,6 +620,17 @@ The implicit terms are:
 A(\tau^{rk})=&\frac{\partial(\tau(V+v))}{\partial y}+\frac{1}{RePr}\frac{\partial^2\tau}{\partial y^2}-2A_2\frac{1}{T_{ref}^2}\frac{Ri_b}{Re Pr}\frac{\partial^2 T}{\partial x_j^2}+A_2\frac{1}{Re}\frac{\partial (\mu+\overline{\mu})}{\partial T}\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}\\&-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{11}+S_{11}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{11}\Big)\Bigg(\frac{\partial v_1}{\partial x}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{12}+S_{12}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{12}\Big)\Bigg(\frac{\partial v_2}{\partial x}+\frac{\partial v_1}{\partial y}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{13}+S_{13}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{13}\Big)\Bigg(\frac{\partial v_3}{\partial x}+\frac{\partial v_1}{\partial z}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{33}+S_{33}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{33}\Big)\frac{\partial v_3}{\partial z}\\&-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{23}+S_{23}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{23}\Big)\Bigg(\frac{\partial v_2}{\partial z}+\frac{\partial v_3}{\partial y}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu}{\partial T}\big(s_{22}+S_{22}\big)+\frac{\partial\bar{\mu}}{\partial T}s_{22}\Big)\frac{\partial v_2}{\partial y}\\&+Ri_b(n_1v_1+n_2v_2+n_3v_3)
 \end{split}
 \end{align}
+
+These implicit terms have an implicit and explicit part. The explicit Crank- Nicholson part is:
+\begin{align}\begin{split}
+&A(\tau^{rk})=\frac{\partial(\tau^{rk}(V^{rk}+v^{rk}))}{\partial y}+\frac{1}{RePr}\frac{\partial^2\tau^{rk}}{\partial y^2}-2A_2\frac{1}{T_{ref}^2}\frac{Ri_b}{Re Pr}\frac{\partial^2 T^{rk}}{\partial x_j^2}+A_2\frac{1}{Re}\frac{\partial (\mu^{rk}+\overline{\mu}^{rk})}{\partial T^{rk}}\frac{\partial u_{i}^{rk}}{\partial x_j}\frac{\partial u_{i}^{rk}}{\partial x_j}\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk}}{\partial T}\big(s_{11}^{rk}+S_{11}^{rk}\big)+\frac{\partial\bar{\mu}^{rk}}{\partial T}s_{11}^{rk}\Big)\Bigg(\frac{\partial v_1^{rk}}{\partial x}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu^{rk}}{\partial T}\big(s_{12}^{rk}+S_{12}^{rk}\big)+\frac{\partial\bar{\mu}^{rk}}{\partial T}s_{12}^{rk}\Big)\Bigg(\frac{\partial v_2^{rk}}{\partial x}+\frac{\partial v_1^{rk}}{\partial y}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk}}{\partial T}\big(s_{13}^{rk}+S_{13}^{rk}\big)+\frac{\partial\bar{\mu}^{rk}}{\partial T}s_{13}^{rk}\Big)\Bigg(\frac{\partial v_3^{rk}}{\partial x}+\frac{\partial v_1^{rk}}{\partial z}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu^{rk}}{\partial T}\big(s_{33}^{rk}+S_{33}^{rk}\big)+\frac{\partial\bar{\mu}^{rk}}{\partial T}s_{33}^{rk}\Big)\frac{\partial v_3^{rk}}{\partial z}\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk}}{\partial T}\big(s_{23}^{rk}+S_{23}^{rk}\big)+\frac{\partial\bar{\mu}^{rk}}{\partial T}s_{23}^{rk}\Big)\Bigg(\frac{\partial v_2^{rk}}{\partial z}+\frac{\partial v_3^{rk}}{\partial y}\Bigg)-\frac{2}{Re}\Big(\frac{\partial\mu^{rk}}{\partial T}\big(s_{22}^{rk}+S_{22}^{rk}\big)+\frac{\partial\bar{\mu}^{rk}}{\partial T}s_{22}^{rk}\Big)\frac{\partial v_2^{rk}}{\partial y}\\&+Ri_b(n_1v_1^{rk}+n_2v_2^{rk}+n_3v_3^{rk})\\&
+-2A_2\frac{1}{T_{ref}^2}\frac{Ri_b}{Re Pr}\frac{\partial^2 T^{rk+1}}{\partial x_j^2}+A_2\frac{1}{Re}\frac{\partial (\mu^{rk+1}+\overline{\mu}^{rk+1})}{\partial T^{rk+1}}\frac{\partial u_{i}^{rk+1}}{\partial x_j}\frac{\partial u_{i}^{rk+1}}{\partial x_j}\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk+1}}{\partial T}\big(s_{11}^{rk+1}+S_{11}^{rk+1}\big)+\frac{\partial\bar{\mu}^{rk+1}}{\partial T}s_{11}^{rk+1}\Big)\Bigg(\frac{\partial v_1^{rk+1}}{\partial x}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk+1}}{\partial T}\big(s_{12}^{rk+1}+S_{12}^{rk+1}\big)+\frac{\partial\bar{\mu}^{rk+1}}{\partial T}s_{12}^{rk+1}\Big)\Bigg(\frac{\partial v_2^{rk+1}}{\partial x}+\frac{\partial v_1^{rk+1}}{\partial y}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk+1}}{\partial T}\big(s_{13}^{rk+1}+S_{13}^{rk+1}\big)+\frac{\partial\bar{\mu}^{rk+1}}{\partial T}s_{13}^{rk+1}\Big)\Bigg(\frac{\partial v_3^{rk+1}}{\partial x}+\frac{\partial v_1^{rk+1}}{\partial z}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk+1}}{\partial T}\big(s_{33}^{rk+1}+S_{33}^{rk+1}\big)+\frac{\partial\bar{\mu}^{rk+1}}{\partial T}s_{33}^{rk+1}\Big)\frac{\partial v_3^{rk+1}}{\partial z}\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk+1}}{\partial T}\big(s_{23}^{rk+1}+S_{23}^{rk+1}\big)+\frac{\partial\bar{\mu}^{rk+1}}{\partial T}s_{23}^{rk+1}\Big)\Bigg(\frac{\partial v_2^{rk+1}}{\partial z}+\frac{\partial v_3^{rk+1}}{\partial y}\Bigg)\\&-\frac{2}{Re}\Big(\frac{\partial\mu^{rk+1}}{\partial T}\big(s_{22}^{rk+1}+S_{22}^{rk+1}\big)+\frac{\partial\bar{\mu}^{rk+1}}{\partial T}s_{22}^{rk+1}\Big)\frac{\partial v_2^{rk+1}}{\partial y}\\&+Ri_b(n_1v_1^{rk+1}+n_2v_2^{rk+1}+n_3v_3^{rk+1})
+\end{split}
+\end{align}
+The implicit Crank- Nicholson part is:
+\begin{equation}
+A(\tau^{rk+1})=\frac{\partial(\tau^{rk+1}(V^{rk+1}+v^{rk+1}))}{\partial y}+\frac{1}{RePr}\frac{\partial^2\tau^{rk+1}}{\partial y^2}
+\end{equation}
 \pagebreak
 This document is based on some of the following references. The rest could be helpful in the future: \cite{kaminski2014transient,pringle2012minimal,eaves2015disruption,kaminski2017nonlinear,rabin2012triggering,winters1995available,turbulent_energy,turbulent_energy2,govindarajan2014instabilities,stratified_Instabilities,boussinesq1,marcotte2017optimal,nabi2017adjoint,notes_set,notes_set2,kundu2008fluid}
 \bibliography{Adjoint_Equations_bib}
