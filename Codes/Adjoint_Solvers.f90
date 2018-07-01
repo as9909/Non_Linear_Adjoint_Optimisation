@@ -3,17 +3,29 @@ MODULE Adjoint_Solvers
 ! Make current step rk and the previous rkm1 instead of how it is presently: where current step is rkp1 and previous is rk
 
 SUBROUTINE RK_Solver_Back
+USE Remove_Divergence
+USE Thomas_Matrix_Algorithm_real
+USE, INTRINSIC :: iso_c_binding
+USE Fourier_Spectral
+IMPLICIT NONE
+include 'fftw3.f03'
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
+INTEGER :: I, J, K
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN)    :: U_total, V_total, W_total, TH_total,&
+                                                                U_bar, V_bar, W_bar, TH_bar
 
+
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) :: u, v, w, TH
 
 
 stau_dblebreve=0.0_DP
 FORALL  (I=1:NX, J=1:NZ, K=K_start:K_end)
 stau_dblebreve(I,J,K)=(stau(I,J,K)*DYF(K-1)+stau(I,J,K-1)*DYF(K))/(2*DY(K-1))
 END FORALL
-INTENT(IN):: TH_p_THbar, TH_bar
-TH=TH_p_THbar-TH_bar ! Remove laminar temperature profile from the total real temperature
-TH_rkp1=TH_p_THbar_rkp1-TH_bar_rkp1
-THpTHB=TH_p_THbar+THB
+INTENT(IN):: TH_total, TH_bar
+TH=TH_total-TH_bar ! Remove laminar temperature profile from the total real temperature
+TH_rkp1=TH_total_rkp1-TH_bar_rkp1
+THpTHB=TH_total+THB
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, u, F_u )
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, v, F_v )
