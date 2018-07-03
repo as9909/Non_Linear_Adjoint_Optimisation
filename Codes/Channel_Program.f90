@@ -41,7 +41,7 @@ PROGRAM Channel_Program
 ! Boundary condition type: THB_BC_TYPE_X, THB_BC_TYPE_Z (1- Constant,
 ! 2- Sin variation, 3- Cos variation),
 ! THB_BC_TYPE_Y (1 - Linear profile and 2 - Tanh profile),
-! THB_BC_Lower, THB_BC_Upper (1- Dirichlet, 2- Neumann): type used to generate
+! THB_BC_Lower, THB_BC_Upper (1- Dirichlet, 2- Neumann):: type used to generate
 ! y direction profile
 ! Boundary condition at walls: THB_wall_lower, THB_wall_upper
 ! (value (Dirichlet) or gradient (Neumann))
@@ -92,14 +92,16 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       W_BC_Lower=1, W_BC_Upper=1, THB_BC_TYPE_X=1, &
                       THB_BC_TYPE_Y=1, THB_BC_TYPE_Z=1, THB_BC_Lower=1, &
                       THB_BC_Upper=1, Hydro_Background=1,&
-                      TH_IC_TYPE_Y=2, TH_BC_Lower=1, TH_BC_Upper=1
+                      TH_IC_TYPE_Y=2, TH_BC_Lower=1, TH_BC_Upper=1, &
+                      max_iter=40
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
   Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=5, Lz=2.0_DP*pi, Stretch_y=1.75_DP,&
   n1=0.0_DP, n2=0.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.0_DP, &
     Dist_amp=1_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
     W_wall_upper=0.0_DP, THB_wall_lower=15.0_DP, THB_wall_upper=10.0_DP, &
-    CFL=0.25_DP, Ri=0.25_DP, Pr=7_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP
+    CFL=0.25_DP, Ri=0.25_DP, Pr=7_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP, &
+    J, Eo, ETau, vel_norm_sq, TH_norm_sq
 REAL(KIND=DP) :: delta_t, time, time_final=10.0_DP, T_ref=290.0_DP,&
                  Delta_T_Dim=270.0_DP
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
@@ -108,10 +110,13 @@ REAL(KIND=DP), DIMENSION(1:NX) :: GX
 REAL(KIND=DP), DIMENSION(0:NY+1) :: GY, GYF
 REAL(KIND=DP), DIMENSION(1:NZ) :: GZ, kz
 REAL(KIND=DP), DIMENSION(0:NY) :: DY, DYF
-REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, P, THB, TH, mu, mu_dbl_breve
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, P, THB, TH, mu, mu_dbl_breve &
+                                              Uo, Vo, Wo, THo, TH_sq
 REAL(KIND=DP), DIMENSION(1:Nx/2+1) :: kx
 type(C_PTR) :: plan_fwd, plan_bkd
 INTEGER :: I,J,K, K_Start, K_End
+REAL(KIND=DP), DIMENSION(:), ALLOCATABLE :: time_ary, temp_time
+
 ! ---------- Find a way to remove these from here and hard code them -----------
 gamma(1) = 8.0_DP/15.0_DP
 gamma(2) = 5.0_DP/12.0_DP
@@ -140,29 +145,156 @@ CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref,Delta_T_Dim, DY, DYF,K_sta
 !P=0.0_DP
 CALL Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp_P, P)
 ! ------------------------------------------------------------------------------
-OPEN(unit=1, file='temperature_profile.dat', status='replace')
-OPEN(unit=2, file='velocity_profile.dat', status='replace')
-OPEN(unit=3, file='y.dat', status='replace')
-WRITE(3,*) GYF
-time = 0.0_DP
-DO WHILE (time .le. time_final)
+J_old=0
+J=1
+DO WHILE (J .gt. J_old)
+! --------------------------- Initial Energy Start ---------------------------
+CALL Vector_Volume_Integral(U,V,W,U,V,W,Nx,Ny,N_y,Nz,DY, DYF,Lx,Ly,Lz,vel_norm_sq)
+TH_sq=TH*TH
+Integrate_Volume(TH_sq,Nx,Ny,N_y,Nz,DY_F,Lx,Ly,Lz,TH_norm_sq)
+Eo=(1.0_DP/2.0_DP)*(vel_norm_sq+(Ri/(T_ref**2))*TH_norm_sq)
+! --------------------------- Initial Energy End ---------------------------
+! --------------------------- Direct Solver Start ------------------------------
+ALLOCATE(time_ary(1))
+time_ary=time
+
+u_fluc=U-U_bar
+v_fluc=V-V_bar
+w_fluc=W-W_bar
+TH_fluc=TH-TH_bar
+
+CALL Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, &
+ u_fluc, v_fluc, w_fluc, TH_fluc, mu,Dissipation)
+ ALLOCATE(diss_ary(1))
+ diss_ary=Dissipation
+
+iter=0
+! Direct Solution
+DO WHILE ((time .lt. time_final) .OR. (iter .ge.2))
+iter=iter+1
 CALL courant( NX, NY, NZ, Lx, Ly, Lz, DYF, CFL, Ri, Pr, Re, U, V, W, &
                     THB_wall_lower, delta_t )
+
 CALL RK_SOLVER ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
 U_BC_Lower,U_BC_Upper, V_BC_Lower,V_BC_Upper, W_BC_Lower, W_BC_Upper, &
 kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd, DY, DYF, Pr, Re, Ri, &
 U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upper, &
  V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper )
   time=time+delta_t
-  WRITE(1,*) TH(10,10,:)+THB(10,10,:)
-  WRITE(2,*) U(10,10,:)
-  print*, delta_t, time, maxval(TH), maxval(U), maxval(V), maxval(W), maxval(P)
+
+  ALLOCATE(temp_time(size(time_ary)+1 ))
+  temp_time(1:size(time_ary))=time_ary
+  temp_time(size(time_ary)+1)=time
+  DEALLOCATE(time_ary)
+  ALLOCATE(time_ary(size(temp_time)))
+  time_ary=temp_time
+  DEALLOCATE(temp_time)
+
+  u_fluc=U-U_bar
+  v_fluc=V-V_bar
+  w_fluc=W-W_bar
+  TH_fluc=TH-TH_bar
+
+  CALL Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, &
+   u_fluc, v_fluc, w_fluc, TH_fluc, mu,Dissipation)
+
+   ALLOCATE(temp_diss(size(diss_ary)+1 ))
+   temp_diss(1:size(diss_ary))=diss_ary
+   temp_diss(size(diss_ary)+1)=Dissipation
+   DEALLOCATE(diss_ary)
+   ALLOCATE(diss_ary(size(temp_diss)))
+   diss_ary=temp_diss
+   DEALLOCATE(temp_diss)
 END DO
-%% Initialise adjoint velocity
+delta_t=time-time_final
+CALL RK_SOLVER ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
+U_BC_Lower,U_BC_Upper, V_BC_Lower,V_BC_Upper, W_BC_Lower, W_BC_Upper, &
+kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd, DY, DYF, Pr, Re, Ri, &
+U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upper, &
+ V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper )
 
 
-CLOSE(1)
-CLOSE(2)
-CLOSE(3)
+ ALLOCATE(temp_time(size(time_ary)+1 ))
+ temp_time(1:size(time_ary))=time_ary
+ temp_time(size(time_ary)+1)=time_final
+ DEALLOCATE(time_ary)
+ ALLOCATE(time_ary(size(temp_time)))
+ time_ary=temp_time
+ DEALLOCATE(temp_time)
+
+
+ u_fluc=U-U_bar
+ v_fluc=V-V_bar
+ w_fluc=W-W_bar
+ TH_fluc=TH-TH_bar
+
+ CALL Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, &
+  u_fluc, v_fluc, w_fluc, TH_fluc, mu,Dissipation)
+
+  ALLOCATE(temp_diss(size(diss_ary)+1 ))
+  temp_diss(1:size(diss_ary))=diss_ary
+  temp_diss(size(diss_ary)+1)=Dissipation
+  DEALLOCATE(diss_ary)
+  ALLOCATE(diss_ary(size(temp_diss)))
+  diss_ary=temp_diss
+  DEALLOCATE(diss_ary)
+
+
+ ! --------------------------- Initial Energy Start ---------------------------
+ CALL Vector_Volume_Integral(U,V,W,U,V,W,Nx,Ny,N_y,Nz,DY, DYF,Lx,Ly,Lz,vel_norm_sq)
+ TH_sq=TH*TH
+ Integrate_Volume(TH_sq,Nx,Ny,N_y,Nz,DY_F,Lx,Ly,Lz,TH_norm_sq)
+ ETau=(1.0_DP/2.0_DP)*(vel_norm_sq+(Ri/(T_ref**2))*TH_norm_sq)
+ ! --------------------------- Initial Energy End ---------------------------
+
+J_old=J
+ ! ------------------- Obtain The Objective Function: Start ---------------------
+ J=A1*ETau/Eo
+ A2_diss=0.0_DP
+   DO K = 2: size(time_ary)
+ J=J+(diss_ary(K-1)+diss_ary(K))/2.0_DP*(time_ary(K)-time_ary(K-1))
+ END DO
+ ! ------------------- Obtain The Objective Function: End -----------------------
+
+ ! ----------------------------- Direct Solver End -----------------------------
+
+IF (J>J_old)
+ ! ------------------- Set Initial Adjoint Fields: Start -----------------------
+! Obtain the `initial' condition for the adjoint variables
+v1=(A1/Eo* time_final)*U
+v2=(A1/Eo* time_final)*V
+v3=(A1/Eo* time_final)*W
+stau=(A1*Ri* time_final)/(Eo*T_ref**2) * T
+CALL Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp_Q, Q)
+! --------------------- Set Initial Adjoint Fields: End ------------------------
+
+! -------------------------- Adjoint Solver Start ------------------------------
+delta_t=time_final-time_ary(size(time_ary)-1)
+DO I=1:size(time_ary)-1
+! Adjoint Solution
+SUBROUTINE RK_Solver_Back( K_start, K_end, NX, NY, NZ, v1_BC_Lower, v1_BC_Upper, &
+v2_BC_Lower, v2_BC_Upper, v3_BC_Lower, v3_BC_Upper, stau_BC_Lower, stau_BC_Upper, &
+U_total_4, V_total_4, W_total_4,  U_bar_4, V_bar_4, W_bar_4, TH_bar_4, TH_total_4, &
+THB, DY, DYF, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, Pr, Re, Ri, T_ref, &
+A2, v1_wall_Lower, v1_wall_Upper, v2_wall_Lower, v2_wall_Upper, v3_wall_Lower, &
+v3_wall_Upper, stau_wall_Lower, stau_wall_Upper, plan_bkd, plan_fwd, kx, kz, &
+v1, v2, v3, Q, stau )
+IF (I .lt. size(time_ary)-1) THEN
+delta_t=time_ary(size(time_ary)-I)-time_ary(size(time_ary)-I-1)
+END IF
+END DO
+
+! -------------------------- Adjoint Solver End ------------------------------
+
+! ------------------- Update Initial Real Field: Start -----------------------
+update_initial_real_fields(Nx, Ny, Nz, Lx, Ly, Lz, Ri, T_ref, eps, &
+                              DY, DYF,  v1, v2, v3, stau, U, V, W, TH)
+! ------------------- Update Initial Real Field: End -----------------------
+
+END IF
+IF (iter .ge. max_iter) THEN
+STOP
+END IF
+END DO
 CALL FFT_destroy(plan_fwd, plan_bkd)
 END PROGRAM Channel_Program

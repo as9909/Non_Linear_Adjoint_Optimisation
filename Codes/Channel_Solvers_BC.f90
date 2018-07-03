@@ -766,4 +766,95 @@ CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
                        plan_bkd, U, V, W, P)
 END DO
 END SUBROUTINE RK_SOLVER
+
+SUBROUTINE Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, u, v, w, TH, mutot,Dissipation)
+USE Vector_Volume_Integral
+USE Integrate_Volume
+USE Fourier_Spectral
+IMPLICIT NONE
+include 'fftw3.f03'
+
+
+type(C_PTR), INTENT(IN) :: plan_bkd, plan_fwd
+REAL(KIND=DP), DIMENSION(1:Nx/2+1), INTENT(IN) :: kx
+REAL(KIND=DP), DIMENSION(1:Nz), INTENT(IN) :: kz
+REAL(KIND=DP), DIMENSION (0:NY), INTENT(IN) :: DY, DYF
+COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V, F_W, F_TH, &
+F_Ux, F_Uz, F_Vx, F_Vz, F_Wx, F_Wz, F_THx, F_THz
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN) :: u, v, w, TH, mutot
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1):: ux, uy, uz, vx, vy, vz, THx, &
+THy, THz, U_dbl_breve, W_dbl_breve, TH_dbl_breve, mutot_dbl_breve, TH_terms
+
+REAL(KIND=DP) :: Diss_1, Diss_2, Diss_3, TH_Dis
+REAL(KIND=DP), INTENT(OUT) :: Dissipation
+COMPLEX(C_DOUBLE_COMPLEX), PARAMETER :: ii=(0.0_DP, 1.0_DP)
+
+CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, u, F_U )
+CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, v, F_V )
+CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, w, F_W )
+CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, TH, F_TH )
+FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
+F_Ux(I,J,K)=ii*kx(I)*F_U(I,J,K)
+F_Uz(I,J,K)=ii*kz(J)*F_U(I,J,K)
+F_Vx(I,J,K)=ii*kx(I)*F_V(I,J,K)
+F_Vz(I,J,K)=ii*kz(J)*F_V(I,J,K)
+F_Wx(I,J,K)=ii*kx(I)*F_W(I,J,K)
+F_Wz(I,J,K)=ii*kz(J)*F_W(I,J,K)
+
+F_THx(I,J,K)=ii*kx(I)*F_TH(I,J,K)
+F_THz(I,J,K)=ii*kz(J)*F_TH(I,J,K)
+END FORALL
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Ux, Ux )
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Uz, Uz )
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vx, Vx )
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vz, Vz )
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Wx, Wx )
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Wz, Wz )
+
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_THx, THx )
+CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_THz, THz )
+
+U_dbl_breve=0.0_DP
+W_dbl_breve=0.0_DP
+Uy=0.0_DP
+Wy=0.0_DP
+
+FORALL (I=1:NX, J=1:NZ, K=1:NY+1)
+  ! U and W interpolated at the base grid (second order)
+  U_dbl_breve(I,J,K)=(U(I,J,K)*DYF(K-1)+U(I,J,K-1)*DYF(K))/(2*DY(K-1))
+  W_dbl_breve(I,J,K)=(W(I,J,K)*DYF(K-1)+W(I,J,K-1)*DYF(K))/(2*DY(K-1))
+  TH_dbl_breve(I,J,K)=(TH(I,J,K)*DYF(K-1)+TH(I,J,K-1)*DYF(K))/(2*DY(K-1))
+  mutot_dbl_breve(I,J,K)=(mutot(I,J,K)*DYF(K-1)+mutot(I,J,K-1)*DYF(K))/(2*DY(K-1))
+  ! U and W wall normal gradients at the base grid
+  Uy(I,J,K)=(U_dbl_breve(I,J,K)-U_dbl_breve(I,J,K-1))/DYF(K-1)
+  Wy(I,J,K)=(W_dbl_breve(I,J,K)-W_dbl_breve(I,J,K-1))/DYF(K-1)
+  THy(I,J,K)=(TH_dbl_breve(I,J,K)-TH_dbl_breve(I,J,K-1))/DYF(K-1)
+END FORALL
+
+FORALL (I=1:NX, J=1:NZ, K=1:NY+1)
+Vy(I,J,K)=(V(I,J,K+1)-V(I,J,K-1))/(2.0_DP*DYF(K-1))
+END FORALL
+FORALL (I=1:NX, J=1:NZ)
+Vy(I,J,NY+1)=(V(I,J,NY+1)-V(I,J,NY))/DYF(NY)
+END FORALL
+
+FORALL (I=1:NX, J=1:NZ, K=1:NY+1)
+Ux(I,J,K)=Ux(I,J,K)*sqrt(mutot(I,J,K))
+Uy(I,J,K)=Uy(I,J,K)*sqrt(mutot(I,J,K))
+Uz(I,J,K)=Uz(I,J,K)*sqrt(mutot(I,J,K))
+Wx(I,J,K)=Wx(I,J,K)*sqrt(mutot(I,J,K))
+Wy(I,J,K)=Wy(I,J,K)*sqrt(mutot(I,J,K))
+Wz(I,J,K)=Wz(I,J,K)*sqrt(mutot(I,J,K))
+Vx(I,J,K)=Vx(I,J,K)*sqrt(mutot_dbl_breve(I,J,K))
+Vy(I,J,K)=Vy(I,J,K)*sqrt(mutot_dbl_breve(I,J,K))
+Vz(I,J,K)=Vz(I,J,K)*sqrt(mutot_dbl_breve(I,J,K))
+END FORALL
+CALL Vector_Volume_Integral(Ux, Vx, Wx,Ux, Vx, Wx,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,Diss_1)
+CALL Vector_Volume_Integral(Uy, Vy, Wy,Uy, Vy, Wy,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,Diss_2)
+CALL Vector_Volume_Integral(Uz, Vz, Wz,Uz, Vz, Wz,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,Diss_3)
+TH_terms=(THx*THx+THy*THy+THz*THz)*Ri/(Pr*T_ref**2)
+CALL Integrate_Volume(TH_terms,Nx,Ny,Ny,Nz,DYF_mod,Lx,Ly,Lz,TH_Dis)
+Dissipation=Diss_1+Diss_2+Diss_3+TH_Dis
+END SUBROUTINE Dissipation_Calculation
+
 END MODULE Channel_Solvers_BC

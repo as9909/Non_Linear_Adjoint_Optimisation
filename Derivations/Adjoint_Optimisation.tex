@@ -356,7 +356,7 @@ E(t)=\frac{1}{2V}\int_V \bigg(u_i(t)^2+Ri_b \frac{T(t)^2}{T_{ref}(t)^2}\bigg)\te
 \end{equation}
 and dissipation
 \begin{equation}
-D=\frac{1}{\mathcal{T}}\int_{0}^{\mathcal{T}}\frac{1}{V}\frac{1}{Re}\int_V\Bigg[\Big((\mu+\overline{\mu})\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}+\frac{Ri_b}{Pr}\Big(\frac{1}{T_0}\Big)^2{\frac{\partial T}{\partial x}\frac{\partial T}{\partial x}}\Bigg]\text{d}V\text{d}t.
+D=\frac{1}{\mathcal{T}}\int_{0}^{\mathcal{T}}\frac{1}{V}\frac{1}{Re}\int_V\Bigg[\Big((\mu+\overline{\mu})\frac{\partial u_{i}}{\partial x_j}\frac{\partial u_{i}}{\partial x_j}+\frac{Ri_b}{Pr}\Big(\frac{1}{T_0}\Big)^2{\frac{\partial T}{\partial x_j}\frac{\partial T}{\partial x_j}}\Bigg]\text{d}V\text{d}t.
 \end{equation}
 Thereforem we can define a cost function, $\mathcal{J}$
 \begin{equation}
@@ -364,11 +364,11 @@ Thereforem we can define a cost function, $\mathcal{J}$
 \end{equation}
 where $0\le A_1,A_2\in\mathbb{R}\le 1$.
 \begin{equation}
-E_0=\frac{1}{2}\Big\langle u_{0,i},u_{0,i}\Big\rangle+Ri_b \frac{\langle T_{0,i},T_{0,i}\rangle}{T_{ref}^2}.
+E_0=\frac{1}{2}\Big\langle u_{0,i},u_{0,i}\Big\rangle+\frac{1}{2}Ri_b \frac{\langle T_{0},T_{0}\rangle}{T_{ref}^2}.
 \end{equation}
 Hence, we can define a constrained functional
 \begin{align}\begin{split}
-\mathcal{L}=&\mathcal{J}(\mathcal{T})-\Bigg[\frac{\partial{u_i}}{\partial{t}}+(U_j+u_j)\frac{\partial u_i}{\partial x_j} +u_j\frac{\partial U_i}{\partial x_j}+\frac{\partial p}{\partial x_i}-{Ri_bT}n_i\\&-{\frac{2}{Re}}{\frac{\partial}{\partial x_j}}\Big({\mu}\big(s_{ij}+S_{ij}\big)+\mathbf{\bar{\mu}}s_{ij}\Big),v_i\Bigg]-\Bigg[\frac{\partial{T}}{\partial{t}}+(U_j+u_j)\frac{\partial T}{\partial x_j} +u_j\frac{\partial(\overline{T}+T_0)}{\partial x_j}-\frac{1}{{Re }Pr} \frac{\partial^2T}{\partial x_j^2},\tau\Bigg]\\&-\Bigg[\frac{\partial u_i}{\partial x_i},q\Bigg]-\langle u_i(0)-u_{0,i},v_{0,i}\rangle-\langle T(0)-T_{0},\tau_{0}\rangle-\frac{1}{2}\Big(\Big\langle u_{0,i},u_{0,i}\Big\rangle+Ri_b \frac{\langle T_{0,i},T_{0,i}\rangle}{T_{ref}^2}-E_0\Big)c.
+\mathcal{L}=&\mathcal{J}(\mathcal{T})-\Bigg[\frac{\partial{u_i}}{\partial{t}}+(U_j+u_j)\frac{\partial u_i}{\partial x_j} +u_j\frac{\partial U_i}{\partial x_j}+\frac{\partial p}{\partial x_i}-{Ri_bT}n_i\\&-{\frac{2}{Re}}{\frac{\partial}{\partial x_j}}\Big({\mu}\big(s_{ij}+S_{ij}\big)+\mathbf{\bar{\mu}}s_{ij}\Big),v_i\Bigg]-\Bigg[\frac{\partial{T}}{\partial{t}}+(U_j+u_j)\frac{\partial T}{\partial x_j} +u_j\frac{\partial(\overline{T}+T_0)}{\partial x_j}-\frac{1}{{Re }Pr} \frac{\partial^2T}{\partial x_j^2},\tau\Bigg]\\&-\Bigg[\frac{\partial u_i}{\partial x_i},q\Bigg]-\langle u_i(0)-u_{0,i},v_{0,i}\rangle-\langle T(0)-T_{0},\tau_{0}\rangle-\frac{1}{2}\Big(\Big\langle u_{0,i},u_{0,i}\Big\rangle+Ri_b \frac{\langle T_{0},T_{0}\rangle}{T_{ref}^2}-E_0\Big)c.
 \end{split}\end{align}
 where,
 \begin{equation}
@@ -423,7 +423,7 @@ where we have assumed that
 
 \subsubsection*{Variation with $\mathbf{u_{0,i}}$}
 \begin{align}\label{eq:Adjoint_incompressibility}\begin{split}
-&\frac{\delta \mathcal{L}}{\delta u_{0,i}}\cdot \delta u_{0,i}=\langle \delta u_{0,i},v_{0,i}\rangle-\langle cu_{0,i},\delta u_{0,i} \rangle=\langle v_{0,1}-cu_{0,i},\delta u_{0,i}\rangle.
+&\frac{\delta \mathcal{L}}{\delta u_{0,i}}\cdot \delta u_{0,i}=\langle \delta u_{0,i},v_{0,i}\rangle-\langle cu_{0,i},\delta u_{0,i} \rangle=\langle v_{0,i}-cu_{0,i},\delta u_{0,i}\rangle.
 \end{split}\end{align}
 
 \subsubsection*{Variation with $\mathbf{T_{0}}$}
@@ -473,7 +473,7 @@ A_1\frac{Ri_b}{E_0T_{ref}^2} T(\mathcal{T})-\frac{1}{\mathcal{T}}\tau(\mathcal{T
 \begin{align}\label{eq:Adjoint_Direct_initial_velocity_2}
 v_{0,i}-cu_{0,i}=0.
 \end{align}
-\subsubsection*{From $\mathbf{T_{0,i}}$ Variation}
+\subsubsection*{From $\mathbf{T_{0}}$ Variation}
 \begin{align}\label{eq:Adjoint_Direct_initial_temperature_2}
 \tau_{0}-\frac{Ri_b}{T_{ref}^2}cT_{0}=0.
 \end{align}
@@ -488,15 +488,15 @@ Also, from velocity and temperature variation $q$ and $\tau$ must be periodic.
 	\item Back integrate the adjoint equations: mass \eqref{eq:Adjoint_incompressibility}, momentum \eqref{eq:Adjoint_momentum} and temperature conservation equations \eqref{eq:Adjoint_scalar}.
 	\item Check if the optimal constraints i.e. equations \eqref{eq:Adjoint_Direct_initial_velocity_1}, \eqref{eq:Adjoint_Direct_initial_velocity_2}, \eqref{eq:Adjoint_Direct_initial_temperature_1} and \eqref{eq:Adjoint_Direct_initial_temperature_2}. Otherwise, these provide the next guess e.g. for velocity
 	\begin{equation}
-	u_{0,i}^{(n+1)}=u_{0,i}^{(n)}+\frac{\epsilon}{c}(v_{0,i}^{n}-cu_{0,i}^{n}),
+	u_{0,i}^{(n+1)}=u_{0,i}^{(n)}+{\epsilon}(v_{0,i}^{n}-cu_{0,i}^{n}),
 	\end{equation}
 	and for temperature
 	\begin{equation}
-	T_{0,i}^{(n+1)}=T_{0,i}^{(n)}+\frac{\epsilon}{c}\bigg(\tau_{0}^{(n)}-\frac{Ri_b}{T_{ref}^2}cT_{0}^{(n)}\bigg).
+	T_{0}^{(n+1)}=T_{0}^{(n)}+{\epsilon}\frac{T_{ref}^2}{Ri_b}\bigg(\tau_{0}^{(n)}-\frac{Ri_b}{T_{ref}^2}cT_{0}^{(n)}\bigg).
 	\end{equation}
 	The lagrange multiplier $c$ must be chosen such that the initial energy constraint,
 	\begin{equation}
-	E_0^{(n+1)}=\frac{1}{2}\Big\langle u_{0,i}^{(n+1)},u_{0,i}^{(n+1)}\Big\rangle+Ri_b \frac{\langle T_{0,i}^{(n+1)},T_{0,i}^{(n+1)}\rangle}{T_{ref}^2}=E_0
+	E_0^{(n+1)}=\frac{1}{2}\Big\langle u_{0,i}^{(n+1)},u_{0,i}^{(n+1)}\Big\rangle+\frac{1}{2}Ri_b \frac{\langle T_{0}^{(n+1)},T_{0}^{(n+1)}\rangle}{T_{ref}^2}=E_0
 	\end{equation}
 	is satisfied for all iterations.
 \end{itemize}

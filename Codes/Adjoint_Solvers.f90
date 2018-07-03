@@ -1,13 +1,13 @@
 MODULE Adjoint_Solvers
-! Make current step rk and the previous rkm1 instead of how it is presently: where current step is rkp1 and previous is rk
+
 SUBROUTINE cubic_spline(F, alpha, delta_t, Nx, Ny, Nz)
 IMPLICIT NONE
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: Nx, Ny, Nz
-REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1, 4), INTENT(INOUT): F
-REAL(KIND=DP), DIMENSION (3), INTENT(IN): alpha
-REAL(KIND=DP), INTENT(IN): delta_t
-REAL(KIND=DP): a, b, c, l1, l2, l3, n1, n2, beta
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1, 4), INTENT(INOUT):: F
+REAL(KIND=DP), DIMENSION (3), INTENT(IN):: alpha
+REAL(KIND=DP), INTENT(IN):: delta_t
+REAL(KIND=DP):: a, b, c, l1, l2, l3, n1, n2, beta
 n1=alpha(3)*delta_t
 n2=(alpha(2)+alpha(3))*delta_t
 beta=delta_t*n1*n2*(delta_t-n1)*(delta_t-n2)*(n1-n2)
@@ -28,32 +28,6 @@ F(I,J,K,3)= a*((alpha(1)+alpha(2))*delta_t)**3 &
 END FORALL
 END SUBROUTINE cubic_spline
 
-SUBROUTINE Adjoint_uw_Boundary_Conditions(A, B, C, v, NX, NY, NZ, v_BC_Lower,&
-                                        v_BC_Upper, v_wall_Lower, v_wall_Upper)
-IMPLICIT NONE
-INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
-INTEGER, INTENT(IN) :: Nx, Ny, Nz
-
-END SUBROUTINE Adjoint_v_Boundary_Conditions
-
-SUBROUTINE Adjoint_v_Boundary_Conditions(A, B, C, v2, NX, NY, NZ, v2_BC_Lower,&
-                                      v2_BC_Upper, v2_wall_Lower, v2_wall_Upper)
-IMPLICIT NONE
-INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
-INTEGER, INTENT(IN) :: Nx, Ny, Nz
-
-END SUBROUTINE Adjoint_v_Boundary_Conditions
-
-
-SUBROUTINE Adjoint_scalar_Boundary_Conditions(A, B, C, stau, NX, NY, NZ, &
-                stau_BC_Lower, stau_BC_Upper, stau_wall_Lower, stau_wall_Upper)
-IMPLICIT NONE
-INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
-INTEGER, INTENT(IN) :: Nx, Ny, Nz
-
-END SUBROUTINE Adjoint_scalar_Boundary_Conditions
-
-
 SUBROUTINE RK_Solver_Back( K_start, K_end, NX, NY, NZ, v1_BC_Lower, v1_BC_Upper, &
 v2_BC_Lower, v2_BC_Upper, v3_BC_Lower, v3_BC_Upper, stau_BC_Lower, stau_BC_Upper, &
 U_total_4, V_total_4, W_total_4,  U_bar_4, V_bar_4, W_bar_4, TH_bar_4, TH_total_4, &
@@ -63,6 +37,9 @@ v3_wall_Upper, stau_wall_Lower, stau_wall_Upper, plan_bkd, plan_fwd, kx, kz, &
 v1, v2, v3, Q, stau )
 USE Remove_Divergence
 USE Thomas_Matrix_Algorithm_real
+USE UW_Boundary_Conditions
+USE V_Boundary_Conditions
+
 USE, INTRINSIC :: iso_c_binding
 USE Fourier_Spectral
 IMPLICIT NONE
@@ -78,7 +55,7 @@ V_total_4, W_total_4,  U_bar_4, V_bar_4, W_bar_4, TH_bar_4, TH_total_4
 
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN):: THB
 
-REAL(KIND=DP), DIMENSION (0:NY+1), INTENT(IN) :: DY, DYF
+REAL(KIND=DP), DIMENSION (0:NY), INTENT(IN) :: DY, DYF
 
 REAL(KIND=DP), DIMENSION (1:3), INTENT(IN) :: gamma, zeta, alpha
 
@@ -92,7 +69,7 @@ REAL(KIND=DP), DIMENSION(1:Nx/2+1), INTENT(IN) :: kx
 
 REAL(KIND=DP), DIMENSION(1:Nz), INTENT(IN) :: kz
 
-REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(OUT) :: v1, v2, v3, Q, stau
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT) :: v1, v2, v3, Q, stau
 
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) ::  U_bar, V_bar, W_bar, TH_bar, &
 U_bar_rkp1, V_bar_rkp1, W_bar_rkp1, TH_bar_rkp1, &
@@ -114,6 +91,7 @@ exp_spec_terms_w1_x, exp_spec_terms_w1_z, exp_spec_terms_w2_x, exp_spec_terms_w2
 Cranck_Exp_v1, Cranck_Exp_v2, Cranck_Exp_v3, Cranck_Exp_stau, Cranck_Exp_v2_temp, &
 Exp_v1_m1, Exp_v2_m1, Exp_v3_m1, Exp_stau_m1, A, B, C
 
+COMPLEX(C_DOUBLE_COMPLEX), PARAMETER :: ii=(0.0_DP, 1.0_DP)
 
 COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_u_rkp1, F_v_rkp1, &
 F_w_rkp1, F_TH_rkp1,F_TH, F_THpTHB_rkp1, F_U_bar_rkp1, F_V_bar_rkp1, F_W_bar_rkp1, &
@@ -442,7 +420,7 @@ v1 = v1+ delta_t*(gamma(RK_step)*Exp_v1 + zeta(RK_step)*Exp_v1_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_v1)
 Exp_v1_m1 = Exp_v1
 
-CALL Adjoint_uw_Boundary_Conditions(A,B,C,v1,NX,NY,NZ,v1_BC_Lower,v1_BC_Upper,v1_wall_Lower,v1_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,v1,NX,NY,NZ,v1_BC_Lower,v1_BC_Upper,v1_wall_Lower,v1_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,v1,NX,NY,NZ)
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, v1, F_v1 )
@@ -498,7 +476,7 @@ v3 = v3+ delta_t*(gamma(RK_step)*Exp_v3 + zeta(RK_step)*Exp_v3_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_v3)
 Exp_v3_m1 = Exp_v3
 
-CALL Adjoint_uw_Boundary_Conditions(A,B,C,v3,NX,NY,NZ,v3_BC_Lower,v3_BC_Upper,v3_wall_Lower,v3_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,v3,NX,NY,NZ,v3_BC_Lower,v3_BC_Upper,v3_wall_Lower,v3_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,v3,NX,NY,NZ)
 
 ! ------
@@ -555,7 +533,7 @@ v2 = v2+ delta_t*(gamma(RK_step)*Exp_v2 + zeta(RK_step)*Exp_v2_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_v2)
 Exp_v2_m1 = Exp_v2
 
-CALL Adjoint_v_Boundary_Conditions(A,B,C,v2,NX,NY,NZ,v2_BC_Lower,v2_BC_Upper,v2_wall_Lower,v2_wall_Upper)
+CALL V_Boundary_Conditions(A,B,C,v2,NX,NY,NZ,v2_BC_Lower,v2_BC_Upper,v2_wall_Lower,v2_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,v2,NX,NY,NZ)
 
 alfa_t=-1.0_DP*alpha(RK_step)*delta_t
@@ -619,7 +597,7 @@ stau = stau+ delta_t*(gamma(RK_step)*Exp_stau + zeta(RK_step)*Exp_stau_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_stau)
 Exp_stau_m1 = Exp_stau
 
-CALL Adjoint_scalar_Boundary_Conditions(A,B,C,stau,NX,NY,NZ,stau_BC_Lower,stau_BC_Upper,stau_wall_Lower,stau_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,stau,NX,NY,NZ,stau_BC_Lower,stau_BC_Upper,stau_wall_Lower,stau_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,stau,NX,NY,NZ)
 
 END DO
