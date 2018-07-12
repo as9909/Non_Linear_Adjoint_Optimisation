@@ -1,4 +1,5 @@
 MODULE Covergence_Check
+CONTAINS
 
 SUBROUTINE Base_to_Fraction(A, Nx, Ny, Nz, DYF, DYF_mod)
 IMPLICIT NONE
@@ -72,7 +73,7 @@ INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: Nx, Ny, Nz
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN):: v1o, v2o, v3o, stauo
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT):: Uo, Vo, Wo, THo
-REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1):: THo_sq, stauo_THo&
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1):: THo_sq, stauo_THo, &
 check_c1_1, check_c1_2, check_c1_3, check_c1_1, check_c1_2, check_c1_3, &
 check_c2_1, check_c2_2, check_c2_3, check_c2_1, check_c2_2, check_c2_3
 REAL(KIND=DP), DIMENSION (1), INTENT(IN):: Lx, Ly, Lz, Ri, T_ref

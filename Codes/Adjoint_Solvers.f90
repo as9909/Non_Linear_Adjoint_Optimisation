@@ -420,7 +420,7 @@ v1 = v1+ delta_t*(gamma(RK_step)*Exp_v1 + zeta(RK_step)*Exp_v1_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_v1)
 Exp_v1_m1 = Exp_v1
 
-CALL UW_Boundary_Conditions(A,B,C,v1,NX,NY,NZ,v1_BC_Lower,v1_BC_Upper,v1_wall_Lower,v1_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,v1,NX,NY,NZ,DY,v1_BC_Lower,v1_BC_Upper,v1_wall_Lower,v1_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,v1,NX,NY,NZ)
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, v1, F_v1 )
@@ -476,7 +476,7 @@ v3 = v3+ delta_t*(gamma(RK_step)*Exp_v3 + zeta(RK_step)*Exp_v3_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_v3)
 Exp_v3_m1 = Exp_v3
 
-CALL UW_Boundary_Conditions(A,B,C,v3,NX,NY,NZ,v3_BC_Lower,v3_BC_Upper,v3_wall_Lower,v3_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,v3,NX,NY,NZ,DY,v3_BC_Lower,v3_BC_Upper,v3_wall_Lower,v3_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,v3,NX,NY,NZ)
 
 ! ------
@@ -597,7 +597,7 @@ stau = stau+ delta_t*(gamma(RK_step)*Exp_stau + zeta(RK_step)*Exp_stau_m1 + &
                     (alpha(RK_step)/2.0_DP)*Cranck_Exp_stau)
 Exp_stau_m1 = Exp_stau
 
-CALL UW_Boundary_Conditions(A,B,C,stau,NX,NY,NZ,stau_BC_Lower,stau_BC_Upper,stau_wall_Lower,stau_wall_Upper)
+CALL UW_Boundary_Conditions(A,B,C,stau,NX,NY,NZ,DY,stau_BC_Lower,stau_BC_Upper,stau_wall_Lower,stau_wall_Upper)
 CALL Thomas_Matrix_Algorithm_real(A,B,C,stau,NX,NY,NZ)
 
 END DO

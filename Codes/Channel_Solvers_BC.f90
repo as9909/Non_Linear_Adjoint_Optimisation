@@ -490,7 +490,7 @@ U_BC_Lower,U_BC_Upper, V_BC_Lower,V_BC_Upper, W_BC_Lower, W_BC_Upper, &
 kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd,&
  DY, DYF, Pr, Re, Ri, &
 U, V, W,P, TH,  THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upper, &
- V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper )
+ V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper,U_store,  V_store, W_store, TH_store )
 ! --------------- This is used to time step relevant equations -----------------
 USE, INTRINSIC :: iso_c_binding
 USE Fourier_Spectral
@@ -510,7 +510,9 @@ REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) :: Exp_TH_m1, Exp_TH, U_THpTHB, &
                 Uy, Wy, Vx, Vz, MU_Uy_p_Vx, MU_Wy_p_Vz, UV, VW, Cranck_Exp_U, &
                 Cranck_Exp_V, Cranck_Exp_W, UU, UW, WW, Ux, Uz, Wx, Wz, MU_Ux, &
                 MU_Wz, MU_Uz_p_Wx, Px, Pz
-REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT) :: U, V, W, TH, P, mu, mu_dbl_breve
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT) :: U, V, W, TH, P,&
+                          mu, mu_dbl_breve
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1,3), INTENT(OUT) ::U_store,  V_store, W_store, TH_store
 REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN)    :: THB
 REAL(KIND=DP), DIMENSION (0:NY+1), INTENT(IN) :: DY, DYF
 REAL(KIND=DP), DIMENSION (1:3), INTENT(IN) :: gamma, zeta, alpha
@@ -764,11 +766,17 @@ CALL Thomas_Matrix_Algorithm_real(A,B,C,W,NX,NY,NZ)
 alfa_t=alpha(RK_step)*delta_t
 CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
                        plan_bkd, U, V, W, P)
+
+U_store(:,:,:,RK_step)=U
+V_store(:,:,:,RK_step)=V
+W_store(:,:,:,RK_step)=W
+TH_store(:,:,:,RK_step)=TH
+
 END DO
 END SUBROUTINE RK_SOLVER
 
 SUBROUTINE Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, u, v, w, TH, mutot,Dissipation)
-USE Vector_Volume_Integral
+USE Convergence_Check
 USE Integrate_Volume
 USE Fourier_Spectral
 IMPLICIT NONE
