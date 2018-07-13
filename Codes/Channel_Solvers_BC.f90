@@ -45,8 +45,8 @@ END FORALL
 DO J = 1, NZ
   DO I = 1, NX/2+1
     DO K = 1, NY
-      A(I,J,K) = 1/(DYF(K)*DY(K-1))
-      C(I,J,K) = 1/(DYF(K)*DY(K))
+      A(I,J,K) =   1.0_DP/(DYF(K)*DY(K-1))
+      C(I,J,K) =   1.0_DP/(DYF(K)*DY(K))
       B(I,J,K) = - A(I,J,K) - C(I,J,K) - kx(I)**2 - kz(J)**2
       Q(I,J,K) = (ii*kx(I)*F_U(I,J,K)+(F_V(I,J,K+1)-F_V(I,J,K))/DYF(K) &
                      +ii*kz(J)*F_W(I,J,K))/alfa_t
@@ -335,7 +335,7 @@ B(I,J,1)=1
 C(I,J,0)=-1
 C(I,J,1)=1
 D(I,J,0)=0
-D(I,J,1)=2*V_Lower
+D(I,J,1)=2.0_DP*V_Lower
 ELSE IF (V_BC_Lower .EQ. 2) THEN
 ! Neumann
 A(I,J,0)=0
@@ -352,7 +352,7 @@ IF (V_BC_Upper .EQ. 1) THEN
 A(I,J,NY+1)=1
 B(I,J,NY+1)=1
 C(I,J,NY+1)=0
-D(I,J,NY+1)=2*V_Upper
+D(I,J,NY+1)=2.0_DP*V_Upper
 ELSE IF (V_BC_Upper .EQ. 2) THEN
 ! Neumann
 A(I,J,NY+1)=-1
@@ -440,7 +440,7 @@ mu(I,J,K) = EXP(a + b/T_Total(I,J,K) + c/T_Total(I,J,K)**2)
 END FORALL
 FORALL  (I=1:NX, J=1:NZ, K=K_start:K_end)
 ! viscosity interpolated at the base grid (second order)
-mu_dbl_breve(I,J,K)=(mu(I,J,K)*DYF(K-1)+mu(I,J,K-1)*DYF(K))/(2*DY(K-1))
+mu_dbl_breve(I,J,K)=(mu(I,J,K)*DYF(K-1)+mu(I,J,K-1)*DYF(K))/(2.0_DP*DY(K-1))
 END FORALL
 END SUBROUTINE Viscosity_Temperature
 
@@ -537,7 +537,7 @@ THpTHB_Int=0.0_DP ! Must Initialise all variables
 U_THpTHB=0.0_DP
 W_THpTHB=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
-  THpTHB_Int(I,J,K)=(THpTHB(I,J,K-1)*DYF(K)+THpTHB(I,J,K)*DYF(K-1))/(2*DY(K-1)) ! \breve\breve(T+To)
+  THpTHB_Int(I,J,K)=(THpTHB(I,J,K-1)*DYF(K)+THpTHB(I,J,K)*DYF(K-1))/(2.0_DP*DY(K-1)) ! \breve\breve(T+To)
   U_THpTHB(I,J,K)=U(I,J,K)*THpTHB(I,J,K)
   W_THpTHB(I,J,K)=W(I,J,K)*THpTHB(I,J,K)
 END FORALL
@@ -545,16 +545,16 @@ CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, U_THpTHB, F_UTH )
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, W_THpTHB, F_WTH )
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, TH,       F_TH  )
 FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
-F_Exp_TH(I,J,K) = -1*ii*kx(I)*F_UTH(I,J,K)-1*ii*kz(J)*F_WTH(I,J,K) + &
-                  -1/(Pr*Re)*(kx(I)**2+kz(J)**2)*F_TH(I,J,K)
+F_Exp_TH(I,J,K) = (-1.0_DP)*ii*kx(I)*F_UTH(I,J,K)-(1.0_DP)*ii*kz(J)*F_WTH(I,J,K) + &
+                  (-1.0_DP)/(Pr*Re)*(kx(I)**2+kz(J)**2)*F_TH(I,J,K)
 END FORALL
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Exp_TH, Exp_Th )
 Exp_Th=0.0_DP
 Cranck_Exp_Th=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
-Exp_Th(I,J,K) = -1*(THpTHB_Int(I,J,K+1)*V(I,J,K+1) &
+Exp_Th(I,J,K) = -1.0_DP*(THpTHB_Int(I,J,K+1)*V(I,J,K+1) &
                 -THpTHB_Int(I,J,K)*V(I,J,K))/DYF(K)+Exp_Th(I,J,K)
-Cranck_Exp_Th(I,J,K) = 1/(Pr*Re*DYF(K))*((TH(I,J,K+1)-TH(I,J,K))/DY(K) &
+Cranck_Exp_Th(I,J,K) = 1.0_DP/(Pr*Re*DYF(K))*((TH(I,J,K+1)-TH(I,J,K))/DY(K) &
                 -(TH(I,J,K)-TH(I,J,K-1))/DY(K-1))
 END FORALL
 U_breve=0.0_DP
@@ -564,8 +564,8 @@ Wy=0.0_DP
 ! 2. Solve the y- velocity
 FORALL (I=1:NX, J=1:NZ, K=1:NY+1)
   ! U and W interpolated at the base grid (quasi second order)
-  U_breve(I,J,K)= (U(I,J,K)*DYF(K)+U(I,J,K-1)*DYF(K-1))/(2*DY(K-1))
-  W_breve(I,J,K)= (W(I,J,K)*DYF(K)+W(I,J,K-1)*DYF(K-1))/(2*DY(K-1))
+  U_breve(I,J,K)= (U(I,J,K)*DYF(K)+U(I,J,K-1)*DYF(K-1))/(2.0_DP*DY(K-1))
+  W_breve(I,J,K)= (W(I,J,K)*DYF(K)+W(I,J,K-1)*DYF(K-1))/(2.0_DP*DY(K-1))
   ! U and W wall normal gradients at the base grid
   Uy(I,J,K)=(U(I,J,K)-U(I,J,K-1))/DY(K-1)
   Wy(I,J,K)=(W(I,J,K)-W(I,J,K-1))/DY(K-1)
@@ -625,8 +625,8 @@ CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Uz, Uz )
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Px, Px )
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Pz, Pz )
 
-MU_Ux = 2*mu*Ux
-MU_Wz = 2*mu*Wz
+MU_Ux = 2.0_DP*mu*Ux
+MU_Wz = 2.0_DP*mu*Wz
 MU_Uz_p_Wx = mu*(Uz+Wx)
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, MU_Ux, F_MU_Ux )
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, MU_Wz, F_MU_Wz )
@@ -644,13 +644,13 @@ CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Exp_W, Exp_W )
 Cranck_Exp_U=0.0_DP
 Cranck_Exp_W=0.0_DP
 FORALL (I=1:NX, J=1:NZ, K=K_start:K_end)
-Cranck_Exp_U(I,J,K) = (1/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)  - &
+Cranck_Exp_U(I,J,K) = (1.0_DP/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)  - &
       mu_dbl_breve(I,J,K)*Vx(I,J,K))/DYF(K) - ((U(I,J,K+1)+U(I,J,K))*V(I,J,K+1) - &
       (U(I,J,K) + U(I,J,K-1))*V(I,J,K))/(2.0_DP*DYF(K)) + Ri*n1*TH(I,J,K) + &
       (mu_dbl_breve(I,J,K+1)*(U(I,J,K+1)-U(I,J,K))/DY(K) &
       - mu_dbl_breve(I,J,K+1)*(U(I,J,K)-U(I,J,K-1))/DY(K-1))/(Re*DYF(K)) &
       -2.0_DP*Px(I,J,K)
-Cranck_Exp_W(I,J,K) = (1/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)  - &
+Cranck_Exp_W(I,J,K) = (1.0_DP/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)  - &
       mu_dbl_breve(I,J,K)*Vz(I,J,K))/DYF(K) - ((W(I,J,K+1)+W(I,J,K))*V(I,J,K+1) - &
       (W(I,J,K) + W(I,J,K-1))*V(I,J,K))/(2.0_DP*DYF(K)) + Ri*n3*TH(I,J,K) + &
       (mu_dbl_breve(I,J,K+1)*(W(I,J,K+1)-W(I,J,K))/DY(K) &
@@ -665,8 +665,8 @@ C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
     DO K = K_Start, K_End
-      A(I,J,K) = -1/(Pr*Re)*1/(DYF(K)*DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
-      C(I,J,K) = -1/(Pr*Re)*1/(DYF(K)*DY(K))  *(alpha(RK_step)/2.0_DP)*delta_t
+      A(I,J,K) = -1.0_DP/(Pr*Re)*1.0_DP/(DYF(K)*DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+      C(I,J,K) = -1.0_DP/(Pr*Re)*1.0_DP/(DYF(K)*DY(K))  *(alpha(RK_step)/2.0_DP)*delta_t
     END DO
   END DO
 END DO
@@ -694,8 +694,8 @@ C=0.0_DP
 DO J = 1, NZ
   DO I = 1, NX
     DO K = 0, Ny+1
-    A(I,J,K) = -2.0_DP*((V(I,J,K-1)/2+1/Re*mu(I,J,K-1)/DYF(K-1))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
-    C(I,J,K) = 2.0_DP*((V(I,J,K+1)/2-1/Re*mu(I,J,K)/DYF(K))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+    A(I,J,K) = -2.0_DP*((V(I,J,K-1)/2+1.0_DP/Re*mu(I,J,K-1)/DYF(K-1))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
+    C(I,J,K) = 2.0_DP*((V(I,J,K+1)/2-1.0_DP/Re*mu(I,J,K)/DYF(K))/DY(K-1))*(alpha(RK_step)/2.0_DP)*delta_t
     B(I,J,K) = 1.0_DP+2.0_DP/Re*(mu(I,J,K)/DYF(K)+mu(I,J,K-1)/DYF(K-1))/DY(K-1)*(alpha(RK_step)/2.0_DP)*delta_t
       END DO
   END DO
@@ -714,9 +714,9 @@ CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vx, Vx )
 CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Vz, Vz )
 
 FORALL  (I=1:NX, J=1:NZ, K=K_start:K_end)
-Cranck_Exp_U(I,J,K)=Cranck_Exp_U(I,J,K)+(1/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)&
+Cranck_Exp_U(I,J,K)=Cranck_Exp_U(I,J,K)+(1.0_DP/Re)*(mu_dbl_breve(I,J,K+1)*Vx(I,J,K+1)&
       - mu_dbl_breve(I,J,K)*Vx(I,J,K))/DYF(K)
-Cranck_Exp_W(I,J,K)=Cranck_Exp_W(I,J,K)+(1/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)&
+Cranck_Exp_W(I,J,K)=Cranck_Exp_W(I,J,K)+(1.0_DP/Re)*(mu_dbl_breve(I,J,K+1)*Vz(I,J,K+1)&
       - mu_dbl_breve(I,J,K)*Vz(I,J,K))/DYF(K)
 END FORALL
 !! ------------------------ Finishing off the u equation -----------------------
@@ -775,23 +775,27 @@ TH_store(:,:,:,RK_step)=TH
 END DO
 END SUBROUTINE RK_SOLVER
 
-SUBROUTINE Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, u, v, w, TH, mutot,Dissipation)
+SUBROUTINE Dissipation_Calculation(NX, NY, NZ,Lx, Ly, Lz, Ri, Pr, T_ref, &
+ plan_bkd, plan_fwd, kx, kz, DY, DYF, u, v, w, TH, mutot,Dissipation)
+
 USE Convergence_Check
-USE Integrate_Volume
 USE Fourier_Spectral
+USE, INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 include 'fftw3.f03'
-
-
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
+INTEGER, INTENT(IN) :: NX, NY, NZ
+INTEGER :: I,J,K
 type(C_PTR), INTENT(IN) :: plan_bkd, plan_fwd
 REAL(KIND=DP), DIMENSION(1:Nx/2+1), INTENT(IN) :: kx
 REAL(KIND=DP), DIMENSION(1:Nz), INTENT(IN) :: kz
+REAL(KIND=DP),  INTENT(IN) :: Lx, Ly, Lz, Ri, Pr, T_ref
 REAL(KIND=DP), DIMENSION (0:NY), INTENT(IN) :: DY, DYF
 COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V, F_W, F_TH, &
 F_Ux, F_Uz, F_Vx, F_Vz, F_Wx, F_Wz, F_THx, F_THz
-REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(IN) :: u, v, w, TH, mutot
-REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1):: ux, uy, uz, vx, vy, vz, THx, &
-THy, THz, U_dbl_breve, W_dbl_breve, TH_dbl_breve, mutot_dbl_breve, TH_terms
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT) :: u, v, w, TH, mutot
+REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1):: Ux, Uy, uz, vx, vy, vz, Wx,Wy,Wz,&
+  THx, THy, THz, U_dbl_breve, W_dbl_breve, TH_dbl_breve, mutot_dbl_breve, TH_terms
 
 REAL(KIND=DP) :: Diss_1, Diss_2, Diss_3, TH_Dis
 REAL(KIND=DP), INTENT(OUT) :: Dissipation
@@ -829,10 +833,10 @@ Wy=0.0_DP
 
 FORALL (I=1:NX, J=1:NZ, K=1:NY+1)
   ! U and W interpolated at the base grid (second order)
-  U_dbl_breve(I,J,K)=(U(I,J,K)*DYF(K-1)+U(I,J,K-1)*DYF(K))/(2*DY(K-1))
-  W_dbl_breve(I,J,K)=(W(I,J,K)*DYF(K-1)+W(I,J,K-1)*DYF(K))/(2*DY(K-1))
-  TH_dbl_breve(I,J,K)=(TH(I,J,K)*DYF(K-1)+TH(I,J,K-1)*DYF(K))/(2*DY(K-1))
-  mutot_dbl_breve(I,J,K)=(mutot(I,J,K)*DYF(K-1)+mutot(I,J,K-1)*DYF(K))/(2*DY(K-1))
+  U_dbl_breve(I,J,K)=(U(I,J,K)*DYF(K-1)+U(I,J,K-1)*DYF(K))/(2.0_DP*DY(K-1))
+  W_dbl_breve(I,J,K)=(W(I,J,K)*DYF(K-1)+W(I,J,K-1)*DYF(K))/(2.0_DP*DY(K-1))
+  TH_dbl_breve(I,J,K)=(TH(I,J,K)*DYF(K-1)+TH(I,J,K-1)*DYF(K))/(2.0_DP*DY(K-1))
+  mutot_dbl_breve(I,J,K)=(mutot(I,J,K)*DYF(K-1)+mutot(I,J,K-1)*DYF(K))/(2.0_DP*DY(K-1))
   ! U and W wall normal gradients at the base grid
   Uy(I,J,K)=(U_dbl_breve(I,J,K)-U_dbl_breve(I,J,K-1))/DYF(K-1)
   Wy(I,J,K)=(W_dbl_breve(I,J,K)-W_dbl_breve(I,J,K-1))/DYF(K-1)
@@ -861,8 +865,11 @@ CALL Vector_Volume_Integral(Ux, Vx, Wx,Ux, Vx, Wx,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,Diss
 CALL Vector_Volume_Integral(Uy, Vy, Wy,Uy, Vy, Wy,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,Diss_2)
 CALL Vector_Volume_Integral(Uz, Vz, Wz,Uz, Vz, Wz,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,Diss_3)
 TH_terms=(THx*THx+THy*THy+THz*THz)*Ri/(Pr*T_ref**2)
-CALL Integrate_Volume(TH_terms,Nx,Ny,Ny,Nz,DYF_mod,Lx,Ly,Lz,TH_Dis)
+CALL Integrate_Volume(TH_terms,Nx,Ny,Ny,Nz,DY,Lx,Ly,Lz,TH_Dis)
 Dissipation=Diss_1+Diss_2+Diss_3+TH_Dis
+print *, Diss_1,Diss_2,Diss_3,TH_Dis
+print *, Dissipation
+
 END SUBROUTINE Dissipation_Calculation
 
 END MODULE Channel_Solvers_BC

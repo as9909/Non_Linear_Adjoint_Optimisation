@@ -1,4 +1,4 @@
-! Run using: gfortran -I/usr/local/include fft.f90 Grid_Definition.f90  Covergence_Check.f90 Channel_Solvers_BC.f90 Adjoint_Solvers.f90 Channel_IC.f90 Channel_Program.f90 -lfftw3 -lm -o channel
+! Run using: gfortran -I/usr/local/include fft.f90 Grid_Definition.f90  Convergence_Check.f90 Channel_Solvers_BC.f90 Adjoint_Solvers.f90 Channel_IC.f90 Channel_Program.f90 -lfftw3 -lm -o channel
 PROGRAM Channel_Program
 ! Program to simulate the scalar transport equation with the assumption
 ! that velocity is known (so one way coupling), in a channel flow,
@@ -84,10 +84,11 @@ USE Grid_Definition
 USE Channel_IC
 USE Channel_Solvers_BC
 USE Adjoint_Solvers
-USE Covergence_Check
+USE Convergence_Check
 USE, INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 include 'fftw3.f03'
+
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=32, NY=64, NZ=32
 INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       W_BC_Lower=1, W_BC_Upper=1, THB_BC_TYPE_X=1, &
@@ -96,43 +97,51 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       TH_IC_TYPE_Y=2, TH_BC_Lower=1, TH_BC_Upper=1, &
                       max_iter=40, v1_BC_Lower=1, v1_BC_Upper=1, &
                      v2_BC_Lower=1, v2_BC_Upper=1, v3_BC_Lower=1, v3_BC_Upper=1, &
-                     stau_BC_Lower=1, stau_BC_Upper=1,
+                     stau_BC_Lower=1, stau_BC_Upper=1
 
 
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
-  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=5, Lz=2.0_DP*pi, Stretch_y=1.75_DP,&
+  Kick_ini_vel=0.1_DP, Lx=2.0_DP*pi, Ly=5, Lz=2.0_DP*pi, Stretch_y=1.75_DP,&
   n1=0.0_DP, n2=0.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.0_DP, &
     Dist_amp=1_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
     W_wall_upper=0.0_DP, THB_wall_lower=15.0_DP, THB_wall_upper=10.0_DP, &
     CFL=0.25_DP, Ri=0.25_DP, Pr=7.0_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP, &
-    J, Eo, ETau, vel_norm_sq, TH_norm_sq, &
     v1_wall_Lower=0.0_DP, v1_wall_Upper=0.0_DP, v2_wall_Lower=0.0_DP, &
     v2_wall_Upper=0.0_DP, v3_wall_Lower=0.0_DP, &
-    v3_wall_Upper=0.0_DP, stau_wall_Lower=0.0_DP, stau_wall_Upper=0.0_DP
-REAL(KIND=DP) :: delta_t, time, time_final=10.0_DP, T_ref=290.0_DP,&
-                 Delta_T_Dim=270.0_DP, A1=0.5_DP, A2=0.5_DP,Dissipation
+    v3_wall_Upper=0.0_DP, stau_wall_Lower=0.0_DP, stau_wall_Upper=0.0_DP, &
+    Kick_Dist_amp_Q=0.0_DP
+REAL(KIND=DP) :: delta_t, time, time_final=0.01_DP, T_ref=290.0_DP,&
+                 Delta_T_Dim=270.0_DP, A1=0.5_DP, A2=0.5_DP,Dissipation,&
+    		 JJ, J_old, Eo, ETau, vel_norm_sq, TH_norm_sq, eps
+
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
 COMPLEX(C_DOUBLE_COMPLEX),PARAMETER :: ii=(0.d0, 1.d0)
 REAL(KIND=DP), DIMENSION(1:NX) :: GX
 REAL(KIND=DP), DIMENSION(0:NY+1) :: GY, GYF
 REAL(KIND=DP), DIMENSION(1:NZ) :: GZ, kz
 REAL(KIND=DP), DIMENSION(0:NY) :: DY, DYF
-REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, P, THB, TH, mu, mu_dbl_breve &
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, P, THB, TH, mu, mu_dbl_breve, &
                                               Uo, Vo, Wo, THo, TH_sq, v1, v2, v3, Q, stau, &
                                               u_fluc, v_fluc, w_fluc, TH_fluc
 
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,3) ::    U_store,  V_store, W_store, TH_store
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) ::    U_bar, V_bar, W_bar, TH_bar
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,2) ::    U_total_4_next, V_total_4_next, W_total_4_next, TH_total_4_next
+
+
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,4) :: U_total_4, V_total_4, W_total_4,&
                             U_bar_4, V_bar_4, W_bar_4, TH_bar_4, TH_total_4
 
 REAL(KIND=DP), DIMENSION(1:Nx/2+1) :: kx
 type(C_PTR) :: plan_fwd, plan_bkd
-INTEGER :: I,J,K, K_Start, K_End, iter, iter_big, iter_adj
+INTEGER :: I,J,K, K_Start, K_End, iter, iter_big, iter_adj, iter_n, i1, i2, i3, i4
 REAL(KIND=DP), DIMENSION(:), ALLOCATABLE :: time_ary, temp_time, Eo_check, Eo_check_temp, &
                                         diss_ary, temp_diss
 
 CHARACTER::filename_1*17, filename_2*18, filename_3*23, filename_4*24
+CHARACTER(LEN=:), allocatable :: filepath
+filepath='/Users/arjunsharma/Documents/NextCloud/Non_Linear_Adjoint_Optimisation/Codes/IO_Files_Store/'
 !CHARACTER(LEN=18) ::filename_2
 ! ---------- Find a way to remove these from here and hard code them -----------
 gamma(1) = 8.0_DP/15.0_DP
@@ -168,41 +177,55 @@ CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref,Delta_T_Dim, DY, DYF, &
 K_start, K_end, mu, mu_dbl_breve)
 
 CALL Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp_P, P)
+
+
+! --------Laminar Flow --------
+
+CALL Initial_Conditions_velocity (U_BC_Lower, U_BC_Upper, V_BC_Lower, &
+V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_lower, W_wall_lower, &
+U_wall_upper, V_wall_upper, W_wall_upper, NX, NY, NZ, Lx, Ly, Lz, kx, kz, DY, &
+DYF, plan_fwd, plan_bkd, U_bulk, 0.0_DP, GYF, U_bar, V_bar, W_bar)
+
+CALL Initial_Conditions_Temperature(NX, NY, NZ, TH_IC_TYPE_Y, &
+    TH_BC_Lower, TH_BC_Upper,GYF,Kick_ini_temp_fluct, 0.0_DP, K_Start, K_End,&
+    Ly, TH_bar)
+! -------------------
 ! ------------------------- Obtain Initial Energy --------------------------
-CALL Vector_Volume_Integral(U,V,W,U,V,W,Nx,Ny,N_y,Nz,DY, DYF,Lx,Ly,Lz, &
+CALL Vector_Volume_Integral(U,V,W,U,V,W,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz, &
                             vel_norm_sq)
 TH_sq=TH*TH
-Integrate_Volume(TH_sq,Nx,Ny,N_y,Nz,DY_F,Lx,Ly,Lz,TH_norm_sq)
+CALL Integrate_Volume(TH_sq,Nx,Ny,Ny,Nz,DY,Lx,Ly,Lz,TH_norm_sq)
 Eo=(1.0_DP/2.0_DP)*(vel_norm_sq+(Ri/(T_ref**2))*TH_norm_sq)
 
 J_old=0.0_DP
-J=1.0_DP
+JJ=1.0_DP
 
 iter_big=0
-! Biggest Loop to check convergence of Lagrangian
-DO WHILE (J .gt. J_old)
-iter_big=iter_big+1
 
+
+! Biggest Loop to check convergence of Lagrangian
+DO WHILE (JJ .gt. J_old)
+iter_big=iter_big+1
 ! Write the initial conditions to appropriate files
 write(filename_1,'(A,I3.3,A)') 'U_total_0_',iter_big,'.bin'
-open(unit=11,file=filename,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_1,form='unformatted',status='replace')
 write(11)(((U(i1,i2,i3), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 write(filename_1,'(A,I3.3,A)') 'V_total_0_',iter_big,'.bin'
-open(unit=11,file=filename_1,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_1,form='unformatted',status='replace')
 write(11)(((V(i1,i2,i3), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 write(filename_1,'(A,I3.3,A)') 'W_total_0_',iter_big,'.bin'
-open(unit=11,file=filename_1,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_1,form='unformatted',status='replace')
 write(11)(((V(i1,i2,i3), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 write(filename_2,'(A,I3.3,A)') 'TH_total_0_',iter_big,'.bin'
-open(unit=11,file=filename_2,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_2,form='unformatted',status='replace')
 write(11)(((TH(i1,i2,i3), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 ! --------------------------- Direct Solver Start ------------------------------
@@ -214,11 +237,11 @@ v_fluc=V-V_bar
 w_fluc=W-W_bar
 TH_fluc=TH-TH_bar
 
-CALL Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, &
- u_fluc, v_fluc, w_fluc, TH_fluc, mu, Dissipation)
+CALL Dissipation_Calculation(NX, NY, NZ,Lx, Ly, Lz, Ri, Pr, T_ref, &
+plan_bkd, plan_fwd, kx, kz, DY, DYF, u_fluc, v_fluc, w_fluc, TH_fluc, mu, Dissipation)
  ALLOCATE(diss_ary(1))
  diss_ary=Dissipation
-
+print *, Dissipation
 iter=0
 ! Direct Solution
 DO WHILE ((time .lt. time_final) .OR. (iter .ge.2)) ! Start RK solver (fwd) loop
@@ -231,28 +254,28 @@ kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd,&
 DY, DYF, Pr, Re, Ri, &
 U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower, &
  U_wall_Upper,V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper,&
- U_store,  V_store, W_store, TH_store ,U_store,  V_store, W_store, TH_store )
+ U_store,  V_store, W_store, TH_store  )
 
- ! writing ascii files to store the total U, V, W and TH at each interation
+ ! writing binary files to store the total U, V, W and TH at each interation
  write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_1,form='unformatted',status='replace')
  write(11)((((U_Store(i1,i2,i3,i4), &
-      i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
  close(11)
  write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_3,form='unformatted',status='replace')
  write(11)((((V_Store(i1,i2,i3,i4), &
-      i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
  close(11)
  write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_3,form='unformatted',status='replace')
  write(11)((((W_Store(i1,i2,i3,i4), &
-      i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
  close(11)
  write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_4,form='unformatted',status='replace')
  write(11)((((TH_Store(i1,i2,i3,i4), &
-      i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
  close(11)
 
 time=time+delta_t
@@ -270,8 +293,8 @@ v_fluc=V-V_bar
 w_fluc=W-W_bar
 TH_fluc=TH-TH_bar
 
-CALL Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, &
-u_fluc, v_fluc, w_fluc, TH_fluc, mu,Dissipation)
+CALL Dissipation_Calculation(NX, NY, NZ,Lx, Ly, Lz, Ri, Pr, T_ref, &
+ plan_bkd, plan_fwd, kx, kz, DY, DYF, u_fluc, v_fluc, w_fluc, TH_fluc, mu,Dissipation)
 
 ALLOCATE(temp_diss(size(diss_ary)+1 ))
 temp_diss(1:size(diss_ary))=diss_ary
@@ -283,6 +306,8 @@ DEALLOCATE(temp_diss)
 END DO ! Ending RK Solver (fwd) loop
 
 delta_t=time-time_final ! Define the last iteration to finish exactly at t= time_final
+
+
 CALL RK_SOLVER ( K_start, K_end, NX, NY, NZ, TH_BC_Lower, TH_BC_Upper, &
 U_BC_Lower,U_BC_Upper, V_BC_Lower,V_BC_Upper, W_BC_Lower, W_BC_Upper, &
 kx, kz, gamma, zeta, alpha, delta_t, Lx, Lz, n1, n2, n3, plan_bkd, plan_fwd, DY, DYF, Pr, Re, Ri, &
@@ -292,26 +317,26 @@ U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upp
  iter=iter+1
 
 ! Replace this with HDF writing
-! writing ascii files to store the total U, V, W and TH for the last time step of forward RK solver
+! writing binary files to store the total U, V, W and TH for the last time step of forward RK solver
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_3,form='unformatted',status='replace')
 write(11)((((U_Store(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_3,form='unformatted',status='replace')
 write(11)((((V_Store(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_3,form='unformatted',status='replace')
 write(11)((((W_Store(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='replace')
+open(unit=11,file=filepath//filename_3,form='unformatted',status='replace')
 write(11)((((TH_Store(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 
  ALLOCATE(temp_time(size(time_ary)+1 ))
@@ -327,8 +352,8 @@ close(11)
  w_fluc=W-W_bar
  TH_fluc=TH-TH_bar
 
- CALL Dissipation_Calculation( plan_bkd, plan_fwd, kx, kz, DY, DYF, &
-  u_fluc, v_fluc, w_fluc, TH_fluc, mu, Dissipation)
+ CALL Dissipation_Calculation(NX, NY, NZ,Lx, Ly, Lz, Ri, Pr, T_ref, &
+ plan_bkd, plan_fwd, kx, kz, DY, DYF, u_fluc, v_fluc, w_fluc, TH_fluc, mu, Dissipation)
 
   ALLOCATE(temp_diss(size(diss_ary)+1 ))
   temp_diss(1:size(diss_ary))=diss_ary
@@ -336,34 +361,32 @@ close(11)
   DEALLOCATE(diss_ary)
   ALLOCATE(diss_ary(size(temp_diss)))
   diss_ary=temp_diss
-  DEALLOCATE(diss_ary)
-
+  DEALLOCATE(temp_diss)
  ! --------------------------- Initial Energy Start ---------------------------
- CALL Vector_Volume_Integral(U,V,W,U,V,W,Nx,Ny,N_y,Nz,DY, DYF,Lx,Ly,Lz,vel_norm_sq)
- TH_sq=TH*TH
- Integrate_Volume(TH_sq,Nx,Ny,N_y,Nz,DY_F,Lx,Ly,Lz,TH_norm_sq)
- ETau=(1.0_DP/2.0_DP)*(vel_norm_sq+(Ri/(T_ref**2))*TH_norm_sq)
+ CALL Vector_Volume_Integral(U,V,W,U,V,W,Nx,Ny,Nz,DY, DYF,Lx,Ly,Lz,vel_norm_sq)
+TH_sq=TH*TH
+ CALL Integrate_Volume(TH_sq,Nx,Ny,Ny,Nz,DY,Lx,Ly,Lz,TH_norm_sq)
+ETau=(1.0_DP/2.0_DP)*(vel_norm_sq+(Ri/(T_ref**2))*TH_norm_sq)
  ! --------------------------- Initial Energy End ---------------------------
 
-J_old=J
+J_old=JJ
  ! ------------------- Obtain The Objective Function: Start ---------------------
- J=A1*ETau/Eo
+ JJ=A1*ETau/Eo
  ! Trapezium rule to integrate A2 cost function
- A2_diss=0.0_DP
- DO K = 2, size(time_ary)
-    J=J+A2*(diss_ary(K-1)+diss_ary(K))/2.0_DP*(time_ary(K)-time_ary(K-1))
+DO K = 2, size(time_ary)
+    JJ=JJ+A2*(diss_ary(K-1)+diss_ary(K))/2.0_DP*(time_ary(K)-time_ary(K-1))
  END DO
- ! ------------------- Obtain The Objective Function: End -----------------------
+! ------------------- Obtain The Objective Function: End -----------------------
 
  ! ----------------------------- Direct Solver End -----------------------------
 
-IF (J>J_old)
+IF (JJ>J_old) THEN
  ! ------------------- Set Initial Adjoint Fields: Start -----------------------
 ! Obtain the `initial' condition for the adjoint variables
-v1=(A1/Eo* time_final)*U
-v2=(A1/Eo* time_final)*V
-v3=(A1/Eo* time_final)*W
-stau=(A1*Ri* time_final)/(Eo*T_ref**2) * T
+v1=(A1/Eo* time_final)*u_fluc
+v2=(A1/Eo* time_final)*v_fluc
+v3=(A1/Eo* time_final)*w_fluc
+stau=(A1*Ri* time_final)/(Eo*T_ref**2) * TH_fluc
 CALL Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp_Q, Q)
 ! --------------------- Set Initial Adjoint Fields: End ------------------------
 
@@ -373,27 +396,27 @@ iter_adj=0
 
 ! ------------- Reading the real variables for the adjoint solver -------------
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='old')
-read(11)((((U_total_4(i1,i2,i3,4-i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+open(unit=11,file=filepath//filename_3,form='unformatted',status='old')
+read(11) ((((U_total_4(i1,i2,i3,4-i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='old')
-read(11)((((V_total_4(i1,i2,i3,4-i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+open(unit=11,file=filepath//filename_3,form='unformatted',status='old')
+read(11) ((((V_total_4(i1,i2,i3,4-i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='old')
-read(11)((((W_total_4(i1,i2,i3,4-i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+open(unit=11,file=filepath//filename_3,form='unformatted',status='old')
+read(11) ((((W_total_4(i1,i2,i3,4-i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 
 write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter,'.bin'
-open(unit=11,file=filename_4,form='unformatted',status='old')
-read(11)((((TH_total_4(i1,i2,i3,4-i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=1,3)
+open(unit=11,file=filepath//filename_4,form='unformatted',status='old')
+read(11) ((((TH_total_4(i1,i2,i3,4-i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
 close(11)
 
 
@@ -401,99 +424,99 @@ DO I=1,size(time_ary)-1
 ! Adjoint Solution
 iter_adj=iter_adj+1
 
-IF iter_adj .gt. 1
+IF (iter_adj .gt. 1) THEN
 U_total_4(:,:,:,1)=U_total_4(:,:,:,4)
-U_total_4(:,:,:,2)=U_total_4_next(i1,i2,i3,2)
-U_total_4(:,:,:,3)=U_total_4_next(i1,i2,i3,1)
+U_total_4(:,:,:,2)=U_total_4_next(:,:,:,2)
+U_total_4(:,:,:,3)=U_total_4_next(:,:,:,1)
 
 
 V_total_4(:,:,:,1)=V_total_4(:,:,:,4)
-V_total_4(:,:,:,2)=V_total_4_next(i1,i2,i3,2)
-V_total_4(:,:,:,3)=V_total_4_next(i1,i2,i3,1)
+V_total_4(:,:,:,2)=V_total_4_next(:,:,:,2)
+V_total_4(:,:,:,3)=V_total_4_next(:,:,:,1)
 
 
 W_total_4(:,:,:,1)=W_total_4(:,:,:,4)
-W_total_4(:,:,:,2)=W_total_4_next(i1,i2,i3,2)
-W_total_4(:,:,:,3)=W_total_4_next(i1,i2,i3,1)
+W_total_4(:,:,:,2)=W_total_4_next(:,:,:,2)
+W_total_4(:,:,:,3)=W_total_4_next(:,:,:,1)
 
 
 TH_total_4(:,:,:,1)=TH_total_4(:,:,:,4)
-TH_total_4(:,:,:,2)=TH_total_4_next(i1,i2,i3,2)
-TH_total_4(:,:,:,3)=TH_total_4_next(i1,i2,i3,1)
+TH_total_4(:,:,:,2)=TH_total_4_next(:,:,:,2)
+TH_total_4(:,:,:,3)=TH_total_4_next(:,:,:,1)
 END IF
 
-IF iter_adj .lt. iter
+IF (iter_adj .lt. iter) THEN
 iter_n=iter-1
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter_n,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='old')
-read(11)((((U_total_4_next(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,i4),i4=1,2)
-read(11)((((U_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=3)
+open(unit=11,file=filepath//filename_3,form='unformatted',status='old')
+read(11) ((((U_total_4_next(i1,i2,i3,i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,2)
+read(11) (((U_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter_n,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='old')
-read(11)((((V_total_4_next(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,i4),i4=1,2)
-read(11)((((V_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=3)
+open(unit=11,file=filepath//filename_3,form='unformatted',status='old')
+read(11) ((((V_total_4_next(i1,i2,i3,i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,2)
+read(11) (((V_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 
 write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter_n,'.bin'
-open(unit=11,file=filename_3,form='unformatted',status='old')
-read(11)((((W_total_4_next(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,i4),i4=1,2)
-read(11)((((W_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=3)
+open(unit=11,file=filepath//filename_3,form='unformatted',status='old')
+read(11) ((((W_total_4_next(i1,i2,i3,i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,2)
+read(11) (((W_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 
 write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter_n,'.bin'
-open(unit=11,file=filename_4,form='unformatted',status='old')
-read(11)((((TH_total_4_next(i1,i2,i3,i4), &
-     i1=1,NX),i2=0,NY+1),i3=1,i4),i4=1,2)
-read(11)((((TH_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ),i4=3)
+open(unit=11,file=filepath//filename_4,form='unformatted',status='old')
+read(11) ((((TH_total_4_next(i1,i2,i3,i4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,2)
+read(11) (((TH_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 ELSE
 
 write(filename_1,'(A,I3.3,A)') 'U_total_0_',iter_big,'.bin'
-open(unit=11,file=filename,form='unformatted',status='old')
-read(11)(((U_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+open(unit=11,file=filepath//filename_1,form='unformatted',status='old')
+read(11) (((U_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 write(filename_1,'(A,I3.3,A)') 'V_total_0_',iter_big,'.bin'
-open(unit=11,file=filename,form='unformatted',status='old')
-read(11)(((V_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+open(unit=11,file=filepath//filename_1,form='unformatted',status='old')
+read(11) (((V_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 
 write(filename_1,'(A,I3.3,A)') 'W_total_0_',iter_big,'.bin'
-open(unit=11,file=filename,form='unformatted',status='old')
-read(11)(((W_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+open(unit=11,file=filepath//filename_1,form='unformatted',status='old')
+read(11) (((W_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
 
 write(filename_2,'(A,I3.3,A)') 'TH_total_0_',iter_big,'.bin'
-open(unit=11,file=filename,form='unformatted',status='old')
-read(11)(((TH_total_4(i1,i2,i3,4), &
-     i1=1,NX),i2=0,NY+1),i3=1,NZ)
+open(unit=11,file=filepath//filename_2,form='unformatted',status='old')
+read(11) (((TH_total_4(i1,i2,i3,4), &
+     i1=1,NX),i2=1,NZ),i3=0,NY+1)
 close(11)
 
-END
+END IF
 
-DO I=1,4
- U_bar_4(:,:,:,I)=U_bar
- V_bar_4(:,:,:,I)=V_bar
- W_bar_4(:,:,:,I)=W_bar
-TH_bar_4(:,:,:,I)=TH_bar
+DO K=1,4
+ U_bar_4(:,:,:,K)=U_bar
+ V_bar_4(:,:,:,K)=V_bar
+ W_bar_4(:,:,:,K)=W_bar
+TH_bar_4(:,:,:,K)=TH_bar
 END DO
 
 CALL RK_Solver_Back( K_start, K_end, NX, NY, NZ, v1_BC_Lower, v1_BC_Upper, &
@@ -510,7 +533,7 @@ END DO
 ! -------------------------- Adjoint Solver End ------------------------------
 
 ! ------------------- Update Initial Real Field: Start -----------------------
-update_initial_real_fields(Nx, Ny, Nz, Lx, Ly, Lz, Ri, T_ref, eps, &
+CALL update_initial_real_fields(Nx, Ny, Nz, Lx, Ly, Lz, Ri, T_ref, eps, &
                               DY, DYF,  v1, v2, v3, stau, U, V, W, TH)
 ! ------------------- Update Initial Real Field: End -----------------------
 
