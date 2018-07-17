@@ -295,7 +295,7 @@ END MODULE Channel_IC
 
 
 
-SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ, U, V, W, TH, mu, kx, kz,F_Vel_func)
+SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ,  DY, DYF, U, V, W, TH, mu, kx, kz,F_Vel_func)
   USE, INTRINSIC :: iso_c_binding
   USE Fourier_Spectral
   IMPLICIT NONE
@@ -309,13 +309,15 @@ SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ, U, V, W, TH, mu, kx, kz,F_
   REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1), INTENT(INOUT) :: U, V, W, TH,mu
   REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) :: Vel_func
   COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1), INTENT(OUT) :: F_Vel_func
+REAL(KIND=DP), DIMENSION(0:NY), INTENT(IN) :: DY, DYF
   REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) :: U_dbl_breve,W_dbl_breve, &
    TH_dbl_breve, mu_dbl_breve, V_bar, Ux, Uz, V_barx, V_barz, Wx, Wz, THx, &
    THz, mux, muz, Uxx, Uzz, V_barxx, V_barzz, Wxx, Wzz, muxx, muzz, muxz, &
    mux_dbl_breve, muz_dbl_breve, V_bary, Uy, Wy, THy, muy, muxy, muzy, Uyy, &
    V_baryy, Wyy, muyy
 
-  COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_Ux, F_Uz, &
+  COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V_bar, F_W, F_TH, F_mu,&
+  F_Ux, F_Uz, &
   F_V_barx, F_V_barz, F_Wx, F_Wz, F_THx, F_THz, F_mux, F_muz,&
   F_Uxx,F_Uzz,F_V_barxx,F_V_barzz,F_Wxx,F_Wzz,F_muxx, F_muzz
 
@@ -327,7 +329,7 @@ SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ, U, V, W, TH, mu, kx, kz,F_
   CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, W, F_W )
   CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, mu, F_mu )
   CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, TH, F_TH )
-  V_bar=0.0_DP;
+  V_bar=0.0_DP
   FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY)
     V_bar(I,J,K)=(V(I,J,K+1)+V(I,J,K))/2.0_DP
   END FORALL
@@ -360,7 +362,7 @@ SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ, U, V, W, TH, mu, kx, kz,F_
     F_Wzz(I,J,K)=(-1.0_DP)*(kz(J)**2)*F_W(I,J,K)
     F_muxx(I,J,K)=(-1.0_DP)*(kx(I)**2)*F_mu(I,J,K)
     F_muzz(I,J,K)=(-1.0_DP)*(kz(J)**2)*F_mu(I,J,K)
-
+    F_muxz(I,J,K)=(-1.0_DP)*(kx(I)*kz(J))*F_mu(I,J,K)
   END FORALL
 
   CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_Ux, Ux )
@@ -409,8 +411,7 @@ Vel_func=Vel_func+Ri*(THx*n1+THy*n2+THz*n3)
 
 Vel_func=Vel_func+ (2.0_DP/Re)*(&
 muxx*Ux+muyy*V_bary+muzz*Wz+muxy*(Uy+V_barx)+muxz*(Uz+Wx)+muzy*(Wy+V_barz)+&
-mux*(Uxx+Uyy+Uzz)+muy*(V_barxx+V_baryy+V_barzz)+muz*(Wxx+Wyy+Wzz)
-&)
+mux*(Uxx+Uyy+Uzz)+muy*(V_barxx+V_baryy+V_barzz)+muz*(Wxx+Wyy+Wzz))
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, Vel_func, F_Vel_func )
 
