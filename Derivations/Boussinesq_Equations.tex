@@ -126,10 +126,27 @@ Ri_b=\frac{\alpha {{\Delta T_0}}g H}{U^2}, Re=\frac{\rho_{ref} U H}{\mu_\text{re
 dropping $\tilde{}$ and noting $\hat{T}=T$, $\hat{p}=p$ we can re-write the equations as following:
  \begin{subequations}\begin{align}
 \nabla\cdot\mathbf{u}=&0,\\
-	\frac{D{\mathbf{u}}}{D{t}}=&-{\nabla} {p}+Ri_b T\mathbf{n} +\frac{1}{Re}{\nabla}\cdot\Big({\mu}\big({\nabla} \mathbf{{u}}+({\nabla} \mathbf{{u}})^T\big)\Big),\\
+	\frac{D{\mathbf{u}}}{D{t}}=&-{\nabla} {p}+Ri_b T\mathbf{n} +\frac{1}{Re}{\nabla}\cdot\Big({\mu}\big({\nabla} \mathbf{{u}}+({\nabla} \mathbf{{u}})^T\big)\Big),\label{eq:momentum}\\
  \frac{D{T}}{D{t}}+\mathbf{{u}}\cdot{\nabla}{{{T_0}}}=&\frac{1}{Pr Re}\nabla^2 T.
 	\end{align}\end{subequations}
 We emphasise that $T$ and $p$ are the deviation from hydrostatic temperature and pressure distributions and ${T}_0$ is the hydrostatic temperature deviation from its mean.
+
+Pressure poisson can be derived by taking the gradient of equation \eqref{eq:momentum} and using incompressibility.
+\begin{subequations}
+	\begin{equation}
+\frac{\partial}{\partial x_i}\Bigg(\frac{\partial u_i}{\partial t}+u_j\frac{\partial u_i}{\partial x_j}\Bigg)=\frac{\partial}{\partial x_i}\Bigg(-\frac{\partial p}{\partial x_i} +Ri_bTn_i+\frac{1}{Re}\Bigg[\frac{\partial }{\partial x_j}\Bigg(\mu\Bigg(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\Bigg)\Bigg)\Bigg]\Bigg)
+\end{equation}
+	\begin{equation}
+\frac{\partial u_j}{\partial x_i}\frac{\partial u_i}{\partial x_j}=- \frac{\partial^2 p}{\partial x_i^2}+Ri_b\frac{\partial T}{\partial x_i}n_i+\frac{1}{Re}\frac{\partial }{\partial x_i}\Bigg[\frac{\partial \mu}{\partial x_j}\Bigg(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\Bigg)+\mu\frac{\partial^2 u_i}{\partial x_j^2}\Bigg]
+	\end{equation}
+	\begin{equation}
+\frac{\partial u_j}{\partial x_i}\frac{\partial u_i}{\partial x_j}= -\frac{\partial^2 p}{\partial x_i^2}+Ri_b\frac{\partial T}{\partial x_i}n_i+\frac{1}{Re}\Bigg[\frac{\partial^2 \mu}{\partial x_j\partial x_i}\Bigg(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\Bigg)+\frac{\partial \mu}{\partial x_j}\frac{\partial^2 u_j}{\partial x_i^2}+\frac{\partial \mu}{\partial x_i}\frac{\partial^2 u_i}{\partial x_j^2}\Bigg]
+\end{equation}	
+	\begin{equation}
+\frac{\partial^2 p}{\partial x_i^2}= -\frac{\partial u_j}{\partial x_i}\frac{\partial u_i}{\partial x_j}+Ri_b\frac{\partial T}{\partial x_i}n_i+\frac{1}{Re}\Bigg[\frac{\partial^2 \mu}{\partial x_j\partial x_i}\Bigg(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\Bigg)+2\frac{\partial \mu}{\partial x_j}\frac{\partial^2 u_j}{\partial x_i^2}\Bigg]
+\end{equation}	
+\end{subequations}
+We need this to set the initial condition for pressure. 
 \subsection{Gases}
 We will consider gases later.
 
@@ -198,7 +215,7 @@ We may need $v$ at the fractional grid and the fractional grid variables at the 
 \begin{equation}
 \nabla\cdot \mathbf{u}=\frac{\partial u}{\partial x}+\frac{\partial v}{\partial y}+\frac{\partial w}{\partial z}=\frac{\delta_s u_{j+1/2}}{\delta x}+\frac{v_{j+1}-v_j}{\Delta y_{j+1/2}}+\frac{\delta_s w_{j+1/2}}{\delta z}
 \end{equation}
-\subsubsection{Pressure Poisson}
+\subsubsection{Pressure Poisson Operator}
 \begin{equation}
 \nabla^2 p=\frac{\partial^2 p}{\partial x^2}+\frac{\partial^2 p}{\partial y^2}+\frac{\partial^2p}{\partial z^2}=\frac{\delta_s^2 p_{j+1/2}}{\delta x^2}+\frac{1}{\Delta y_{j+1/2}}\Big(\frac{p_{j+3/2}-p_{j+1/2}}{\Delta y_{j+1}}-\frac{p_{j+1/2}-p_{j-1/2}}{\Delta y_{j}}\Big)+\frac{\delta_s^2 p_{j+1/2}}{\delta z^2}
 \end{equation}

@@ -448,7 +448,7 @@ and $v_i$ must be periodic, we can assume no-slip and no penetration for adjoint
 \end{align}
 or,
 \begin{tcolorbox}
-\begin{align}\begin{split}
+\begin{align}\label{eq:Adjoint_Momentum}\begin{split}
 \frac{\partial v_i}{\partial t}&+v_j\frac{\partial u_j}{\partial x_i}+\frac{\partial (v_i(U_j+u_j))}{\partial x_j}+\frac{1}{Re}\frac{\partial}{\partial x_j}\Big(({\mu}+\overline{\mu})\Big(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\Big)\Big)\\&-\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}+\frac{\partial q}{\partial x_i}-\frac{A_2}{Re}\frac{\partial}{\partial x_j}\Big((\mu+\overline{\mu})\frac{\partial u_i}{\partial x_j}\Big)=0,
 \end{split}
 \end{align}
@@ -479,6 +479,23 @@ v_{0,i}-cu_{0,i}=0.
 \end{align}
 Also, from velocity and temperature variation $q$ and $\tau$ must be periodic.
 \end{tcolorbox}
+
+Adjoint pressure poisson equation can be derived by taking the gradient of equation \eqref{eq:Adjoint_Momentum} and using incompressibility of both the real and adjoint velocity fields. 
+\begin{subequations}
+	\begin{align}\begin{split}
+	\frac{\partial}{\partial x_i}\Bigg(v_j\frac{\partial u_j}{\partial x_i}&+(U_j+u_j)\frac{\partial v_i}{\partial x_j}+\frac{1}{Re}\Bigg(\frac{\partial({\mu}+\overline{\mu})}{\partial x_j}\Big(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\Big)+({\mu}+\overline{\mu})\frac{\partial^2 v_i}{\partial x_j^2} \Bigg)\\&-\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}+\frac{\partial q}{\partial x_i}-\frac{A_2}{Re}\Bigg(\frac{\partial(\mu+\overline{\mu})}{\partial x_j}\frac{\partial u_i}{\partial x_j}+(\mu+\overline{\mu})\frac{\partial^2u_i}{\partial x_j^2}\Bigg)\Bigg)=0,
+	\end{split}
+	\end{align}
+	\begin{align}\begin{split}
+\frac{\partial}{\partial x_i}\Bigg(v_j\frac{\partial u_j}{\partial x_i}\Bigg)&+\frac{\partial(U_j+u_j)}{\partial x_i}\frac{\partial v_i}{\partial x_j}+\frac{1}{Re}\Bigg(\frac{\partial^2({\mu}+\overline{\mu})}{\partial x_i\partial x_j}\Big(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\Big)+2\frac{\partial ({\mu}+\overline{\mu})}{\partial x_j}\frac{\partial^2 v_i}{\partial x_j^2} \Bigg)\\&-\frac{\partial }{\partial x_i}\Bigg(\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}\Bigg)+\frac{\partial^2 q}{\partial x_i^2}-\frac{A_2}{Re}\Bigg(\frac{\partial^2 (\mu+\overline{\mu})}{\partial x_i \partial x_j}\frac{\partial u_i}{\partial x_j}+\frac{\partial (\mu+\overline{\mu})}{\partial x_i}\frac{\partial^2u_i}{\partial x_j^2}\Bigg)=0,
+\end{split}
+\end{align}	
+\end{subequations}
+
+	\begin{align}\begin{split}
+\frac{\partial^2 q}{\partial x_i^2}&=-\frac{\partial}{\partial x_i}\Bigg(v_j\frac{\partial u_j}{\partial x_i}\Bigg)-\frac{\partial(U_j+u_j)}{\partial x_i}\frac{\partial v_i}{\partial x_j}-\frac{1}{Re}\Bigg(\frac{\partial^2({\mu}+\overline{\mu})}{\partial x_i\partial x_j}\Big(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\Big)+2\frac{\partial ({\mu}+\overline{\mu})}{\partial x_j}\frac{\partial^2 v_i}{\partial x_j^2} \Bigg)\\&+\frac{\partial }{\partial x_i}\Bigg(\tau\frac{\partial (T+\overline{T}+T_0)}{\partial x_i}\Bigg)+\frac{A_2}{Re}\Bigg(\frac{\partial^2 (\mu+\overline{\mu})}{\partial x_i \partial x_j}\frac{\partial u_i}{\partial x_j}+\frac{\partial (\mu+\overline{\mu})}{\partial x_i}\frac{\partial^2u_i}{\partial x_j^2}\Bigg)
+\end{split}
+\end{align}	
 \subsection{Algorithm}
 \begin{tcolorbox}
 \begin{itemize}

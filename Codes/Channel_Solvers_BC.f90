@@ -22,7 +22,7 @@ INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 COMPLEX(KIND=DP),PARAMETER :: ii=(0.d0, 1.d0)
 INTEGER, INTENT(IN) :: NX, NY, NZ
 INTEGER :: I, J, K
-COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V, F_W, F_P, Q
+COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V, F_W, F_P, F_Q
 REAL(KIND=DP), DIMENSION(1:NX/2,1:NZ,0:NY+1), INTENT(INOUT) :: U, V, W, P
 REAL(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: A, B, C
 !COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,0:NY+1):: Vel_Div
@@ -40,7 +40,7 @@ FORALL (I=1:NX/2+1, J=1:NZ, K=0:NY+1)
 A(I,J,K) = 0.0_DP
 B(I,J,K) = 1.0_DP
 C(I,J,K) = 0.0_DP
-Q(I,J,K) = (0.0_DP,0.0_DP)
+F_Q(I,J,K) = (0.0_DP,0.0_DP)
 END FORALL
 DO J = 1, NZ
   DO I = 1, NX/2+1
@@ -48,7 +48,7 @@ DO J = 1, NZ
       A(I,J,K) =   1.0_DP/(DYF(K)*DY(K-1))
       C(I,J,K) =   1.0_DP/(DYF(K)*DY(K))
       B(I,J,K) = - A(I,J,K) - C(I,J,K) - kx(I)**2 - kz(J)**2
-      Q(I,J,K) = (ii*kx(I)*F_U(I,J,K)+(F_V(I,J,K+1)-F_V(I,J,K))/DYF(K) &
+      F_Q(I,J,K) = (ii*kx(I)*F_U(I,J,K)+(F_V(I,J,K+1)-F_V(I,J,K))/DYF(K) &
                      +ii*kz(J)*F_W(I,J,K))/alfa_t
     END DO
   END DO
@@ -60,34 +60,34 @@ DO I=1,NX/2+1
     A(I,J,1)=0.0_DP
     B(I,J,1)=1.0_DP
     C(I,J,1)=0.0_DP
-    Q(I,J,1)=(0.0_DP,0.0_DP)
+    F_Q(I,J,1)=(0.0_DP,0.0_DP)
     A(I,J,NY)=0.0_DP
     B(I,J,NY)=-1.0_DP
     C(I,J,NY)=1.0_DP
-    Q(I,J,NY)=(0.0_DP,0.0_DP)
+    F_Q(I,J,NY)=(0.0_DP,0.0_DP)
  ELSE
   A(I,J,1)=0.0_DP
   B(I,J,1)=1.0_DP
   C(I,J,1)=-1.0_DP
-  Q(I,J,1)=(0.0_DP,0.0_DP)
+  F_Q(I,J,1)=(0.0_DP,0.0_DP)
   A(I,J,NY)=1.0_DP
   B(I,J,NY)=-1.0_DP
   C(I,J,NY)=0.0_DP
-  Q(I,J,NY)=(0.0_DP,0.0_DP)
+  F_Q(I,J,NY)=(0.0_DP,0.0_DP)
  END IF
 END DO
 END DO
-  CALL Thomas_Matrix_Algorithm_fft(A,B,C,Q,NX,NY,NZ)
+  CALL Thomas_Matrix_Algorithm_fft(A,B,C,F_Q,NX,NY,NZ)
 ! Remove Divergence from the original velocity field
 DO J = 1, NZ
   DO I = 1, NX/2+1
     DO K = 1, NY
-      F_U(I,J,K) = F_U(I,J,K) - ii * kx(I) * Q(I,J,K) * alfa_t
+      F_U(I,J,K) = F_U(I,J,K) - ii * kx(I) * F_Q(I,J,K) * alfa_t
       IF (K .ge. 2) THEN ! Ignore the ghost cells
-        F_V(I,J,K) = F_V(I,J,K) - (Q(I,J,K)-Q(I,J,K-1))/DY(K-1) * alfa_t
+        F_V(I,J,K) = F_V(I,J,K) - (F_Q(I,J,K)-F_Q(I,J,K-1))/DY(K-1) * alfa_t
       END IF
-      F_W(I,J,K) = F_W(I,J,K) - ii*kz(J)*Q(I,J,K) * alfa_t
-      F_P(I,J,K) = F_P(I,J,K) + Q(I,J,K)
+      F_W(I,J,K) = F_W(I,J,K) - ii*kz(J)*F_Q(I,J,K) * alfa_t
+      F_P(I,J,K) = F_P(I,J,K) + F_Q(I,J,K)
     END DO
   END DO
 END DO

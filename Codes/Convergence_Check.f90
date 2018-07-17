@@ -136,4 +136,16 @@ Wo=Wo+eps*(v3o-kc*Wo)
 THo=THo+((eps*T_ref**2)/Ri)*(stauo-kc*THo*Ri/(T_ref**2))
 
 END SUBROUTINE update_initial_real_fields
+
+SUBROUTINE Poisson_Adjoint_RHS (v1,v2,v3,stau,u,v,w,TH,U_tot,V_tot,W_tot)
+
+
+
+
+IMPLICIT NONE
+
+
+
+END SUBROUTINE Poisson_Adjoint_RHS
+
 END MODULE Convergence_Check

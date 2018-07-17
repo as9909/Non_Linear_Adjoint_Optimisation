@@ -123,16 +123,13 @@ REAL(KIND=DP), DIMENSION(1:NZ) :: GZ, kz
 REAL(KIND=DP), DIMENSION(0:NY) :: DY, DYF
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: U, V, W, P, THB, TH, mu, mu_dbl_breve, &
                                               Uo, Vo, Wo, THo, TH_sq, v1, v2, v3, Q, stau, &
-                                              u_fluc, v_fluc, w_fluc, TH_fluc
-
-REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,3) ::    U_store,  V_store, W_store, TH_store
-REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) ::    U_bar, V_bar, W_bar, TH_bar
+                                              u_fluc, v_fluc, w_fluc, TH_fluc, &
+                                              U_bar, V_bar, W_bar, TH_bar
+COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) ::    F_Vel_func, F_Adj_Vel_func
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,2) ::    U_total_4_next, V_total_4_next, W_total_4_next, TH_total_4_next
-
-
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,3) ::    U_store,  V_store, W_store, TH_store
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1,4) :: U_total_4, V_total_4, W_total_4,&
                             U_bar_4, V_bar_4, W_bar_4, TH_bar_4, TH_total_4
-
 REAL(KIND=DP), DIMENSION(1:Nx/2+1) :: kx
 type(C_PTR) :: plan_fwd, plan_bkd
 INTEGER :: I,J,K, K_Start, K_End, iter, iter_big, iter_adj, iter_n, i1, i2, i3, i4
@@ -176,7 +173,9 @@ CALL Initial_Conditions_Temperature(NX, NY, NZ, TH_IC_TYPE_Y, &
 CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref,Delta_T_Dim, DY, DYF, &
 K_start, K_end, mu, mu_dbl_breve)
 
-CALL Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp_P, P)
+CALL Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ, U, V, W, TH, mu, kx, kz,F_Vel_func)
+CALL Initial_Conditions_Pressure(NX, NY, NZ, kx, kz, DY, DYF, plan_bkd, &
+                                        F_vel_func, P)
 
 
 ! --------Laminar Flow --------
@@ -387,7 +386,11 @@ v1=(A1/Eo* time_final)*u_fluc
 v2=(A1/Eo* time_final)*v_fluc
 v3=(A1/Eo* time_final)*w_fluc
 stau=(A1*Ri* time_final)/(Eo*T_ref**2) * TH_fluc
-CALL Initial_Conditions_Pressure(NX, NY, NZ, Kick_Dist_amp_Q, Q)
+
+CALL Poisson_Adjoint_RHS(...., F_Adj_Vel_func)
+
+CALL Initial_Conditions_Pressure(NX, NY, NZ, kx, kz, DY, DYF, plan_bkd, &
+                                        F_Adj_Vel_func, Q)
 ! --------------------- Set Initial Adjoint Fields: End ------------------------
 
 ! -------------------------- Adjoint Solver Start ------------------------------
