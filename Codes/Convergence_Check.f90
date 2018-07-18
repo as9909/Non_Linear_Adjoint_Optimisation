@@ -138,14 +138,15 @@ THo=THo+((eps*T_ref**2)/Ri)*(stauo-kc*THo*Ri/(T_ref**2))
 END SUBROUTINE update_initial_real_fields
 
 SUBROUTINE Poisson_Adjoint_RHS (v1,v2,v3,stau,u_tot,v_tot,w_tot,TH_tot,THB, mu_tot, U_bar, V_bar, W_bar, &
-kx, kz, NX, NY, NZ, DY, DYF, Re, plan_bkd, plan_fwd, F_Adj_Vel_func)
+kx, kz, NX, NY, NZ, DY, DYF, K_start, K_end, Re, A2, plan_bkd, plan_fwd, F_Adj_Vel_func)
   USE, INTRINSIC :: iso_c_binding
   USE Fourier_Spectral
   IMPLICIT NONE
   include 'fftw3.f03'
   INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
   INTEGER, INTENT(IN) :: NX, NY, NZ
-  REAL(KIND=DP), INTENT(IN) :: Re
+  INTEGER, INTENT(IN) :: K_Start, K_End
+  REAL(KIND=DP), INTENT(IN) :: Re, A2
   REAL(KIND=DP), DIMENSION(1:Nx/2+1), INTENT(IN) :: kx
   REAL(KIND=DP), DIMENSION(1:Nz), INTENT(IN) :: kz
   REAL(KIND=DP), DIMENSION(0:NY), INTENT(IN) :: DY, DYF
@@ -155,7 +156,7 @@ kx, kz, NX, NY, NZ, DY, DYF, Re, plan_bkd, plan_fwd, F_Adj_Vel_func)
  type(C_PTR), INTENT(IN) :: plan_bkd, plan_fwd
 
  REAL(KIND=DP), DIMENSION (1:NX, 1:NZ, 0:NY+1) :: u, v, w, TH_tot_p_THB, v_frac, V_bar_frac, v2_frac, &
- TH_tot_p_THB, ux, uz, U_barx, U_barz, v_fracx, v_fracz, V_bar_fracx, V_bar_fracz, wx, wz, &
+  ux, uz, U_barx, U_barz, v_fracx, v_fracz, V_bar_fracx, V_bar_fracz, wx, wz, &
 W_barx, W_barz, TH_tot_p_THBx, TH_tot_p_THBz, mu_totx, mu_totz, uxx, uzz, v_fracxx, v_fraczz, &
 wxx, wzz, TH_tot_p_THBxx, TH_tot_p_THBzz, mu_totxx, mu_totzz, mu_totxz, v1x, v1z, v2_fracx, &
 v2_fracz, v3x, v3z, staux, stauz, mu_totx_dbl_breve, mu_totz_dbl_breve, v_fracy, uy, wy, &
@@ -326,17 +327,18 @@ w=w_tot-W_bar
     uyy(I,J,K)= ((u(I,J,K+1)-u(I,J,K))/DY(K)-(u(I,J,K)-u(I,J,K-1))/DY(K-1))/DYF(K)
     wyy(I,J,K)= ((w(I,J,K+1)-w(I,J,K))/DY(K)-(w(I,J,K)-w(I,J,K-1))/DY(K-1))/DYF(K)
     v_fracyy(I,J,K)= ((v_frac(I,J,K+1)-v_frac(I,J,K))/DY(K)-(v_frac(I,J,K)-v_frac(I,J,K-1))/DY(K-1))/DYF(K)
-    TH_tot_p_THByy(I,J,K)= ((TH_tot_p_THB(I,J,K+1)-TH_tot_p_THB(I,J,K))/DY(K)-(TH_tot_p_THB(I,J,K)-TH_tot_p_THB(I,J,K-1))/DY(K-1))/DYF(K)
+    TH_tot_p_THByy(I,J,K)= ((TH_tot_p_THB(I,J,K+1)-TH_tot_p_THB(I,J,K))/DY(K)&
+    -(TH_tot_p_THB(I,J,K)-TH_tot_p_THB(I,J,K-1))/DY(K-1))/DYF(K)
     mu_totyy(I,J,K)= ((mu_tot(I,J,K+1)-mu_tot(I,J,K))/DY(K)-(mu_tot(I,J,K)-mu_tot(I,J,K-1))/DY(K-1))/DYF(K)
   END FORALL
 
-Adj_Vel_func=(-1.0_DP)*(v1*uxx+ v1x*ux+ v2_frac*v_fracyy+ v2_fracy*v_fracy+ v3*wzz+ v3z*wz &
-			v2_frac*v_fracxx+ v2_fracx*v_fracx+ v1*uyy+ v1y*uy+ v3*wxx+ v3x*wx &
+Adj_Vel_func=(-1.0_DP)*(v1*uxx+ v1x*ux+ v2_frac*v_fracyy+ v2_fracy*v_fracy+ v3*wzz+ v3z*wz+ &
+			v2_frac*v_fracxx+ v2_fracx*v_fracx+ v1*uyy+ v1y*uy+ v3*wxx+ v3x*wx+ &
 			v1*uzz+ v1z*uz+ v3*wyy+ v3y*wy+ v2_frac*v_fraczz+ v2_fracz*v_fracz)
 
 Adj_Vel_func=Adj_Vel_func + (-1.0_DP)*(&
-		(U_barx+ux)*v1x+ (V_bar_fracy+v_fracy)*v2_fracy+ (W_barz+wz)*v3z &
-		(U_bary+uy)*v2_fracx+ (V_bar_fracx+v_fracx)*v1y+ (W_barx+wx)*v1z &		
+		(U_barx+ux)*v1x+ (V_bar_fracy+v_fracy)*v2_fracy+ (W_barz+wz)*v3z+ &
+		(U_bary+uy)*v2_fracx+ (V_bar_fracx+v_fracx)*v1y+ (W_barx+wx)*v1z+ &
 		(U_barz+uz)*v3x+ (V_bar_fracz+v_fracz)*v3y+ (W_bary+wy)*v2_fracz)
 
 Adj_Vel_func=Adj_Vel_func + &
@@ -345,14 +347,14 @@ Adj_Vel_func=Adj_Vel_func + &
 
 Adj_Vel_func=Adj_Vel_func + A2/Re*(&
 		mu_totxx*ux+ mu_totxy*v_fracx+ mu_totxz*wx+&
-		mu_totxy*uy+ mu_totyy*v_fracy+ mu_totzy*wy+&		
-		mu_totxz*uz+ mu_totyz*v_fracz+ mu_totzz*wz+&	
+		mu_totxy*uy+ mu_totyy*v_fracy+ mu_totzy*wy+&
+		mu_totxz*uz+ mu_totzy*v_fracz+ mu_totzz*wz+&
 		mu_totx*(uxx+uyy+uzz)+&
-		mu_toty*(v_fracxx+v_fracyy+v_fraczz)+&			
-		mu_totz*(wxx+wyy+wzz)+&
+		mu_toty*(v_fracxx+v_fracyy+v_fraczz)+&
+		mu_totz*(wxx+wyy+wzz))
 
-Adj_Vel_func=Adj_Vel_func - (2.0_DP/Re)*(&
-mu_totxx*ux+mu_totyy*v_fracy+mu_totzz*wz+muxy*(uy+v_fracx)+mu_totxz*(uz+wx)+mu_totzy*(wy+v_fracz)+&
+Adj_Vel_func = Adj_Vel_func - (2.0_DP/Re)*( &
+mu_totxx*ux+mu_totyy*v_fracy+mu_totzz*wz+mu_totxy*(uy+v_fracx)+mu_totxz*(uz+wx)+mu_totzy*(wy+v_fracz)+&
 mu_totx*(uxx+uyy+uzz)+mu_toty*(v_fracxx+v_fracyy+v_fraczz)+mu_totz*(wxx+wyy+wzz))
 
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, Adj_Vel_func, F_Adj_Vel_func )

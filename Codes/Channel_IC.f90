@@ -235,12 +235,13 @@ SUBROUTINE Initial_Conditions_Pressure(NX, NY, NZ, kx, kz, DY, DYF, plan_bkd, &
 ! Use Pressure Poisson to obtain initial pressure
 USE, INTRINSIC :: iso_c_binding
 USE Fourier_Spectral
+USE Channel_Solvers_BC
 IMPLICIT NONE
 include 'fftw3.f03'
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: NX, NY, NZ
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(OUT) :: P
-COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1), INTENT(IN) :: F_vel_funct
+COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1), INTENT(INOUT) :: F_vel_funct
 REAL(KIND=DP), DIMENSION(1:NX/2+1), INTENT(IN) :: kx
 REAL(KIND=DP), DIMENSION(1:NZ), INTENT(IN) :: kz
 REAL(KIND=DP), DIMENSION(0:NY), INTENT(IN) :: DY, DYF
@@ -295,13 +296,14 @@ END MODULE Channel_IC
 
 
 
-SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ,  DY, DYF, U, V, W, TH, mu, kx, kz,F_Vel_func)
+SUBROUTINE Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ,  DY, DYF, U, V, W, TH, mu, kx, kz, &
+K_start, K_end, plan_bkd, plan_fwd, F_Vel_func)
   USE, INTRINSIC :: iso_c_binding
   USE Fourier_Spectral
   IMPLICIT NONE
   include 'fftw3.f03'
   INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
-
+  INTEGER, INTENT(IN) :: K_Start, K_End
   INTEGER, INTENT(IN) :: NX, NY, NZ
   REAL(KIND=DP), INTENT(IN) :: Re, Ri, n1, n2, n3
   REAL(KIND=DP), DIMENSION(1:Nx/2+1), INTENT(IN) :: kx
@@ -319,7 +321,7 @@ REAL(KIND=DP), DIMENSION(0:NY), INTENT(IN) :: DY, DYF
   COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V_bar, F_W, F_TH, F_mu,&
   F_Ux, F_Uz, &
   F_V_barx, F_V_barz, F_Wx, F_Wz, F_THx, F_THz, F_mux, F_muz,&
-  F_Uxx,F_Uzz,F_V_barxx,F_V_barzz,F_Wxx,F_Wzz,F_muxx, F_muzz
+  F_Uxx,F_Uzz,F_V_barxx,F_V_barzz,F_Wxx,F_Wzz,F_muxx, F_muzz, F_muxz
 
   COMPLEX(C_DOUBLE_COMPLEX), PARAMETER :: ii=(0.0_DP, 1.0_DP)
   type(C_PTR), INTENT(IN) :: plan_bkd, plan_fwd

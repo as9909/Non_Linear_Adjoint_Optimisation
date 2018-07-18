@@ -173,7 +173,9 @@ CALL Initial_Conditions_Temperature(NX, NY, NZ, TH_IC_TYPE_Y, &
 CALL Viscosity_Temperature(NX, NY, NZ, TH, THB, T_ref,Delta_T_Dim, DY, DYF, &
 K_start, K_end, mu, mu_dbl_breve)
 
-CALL Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ,  DY, DYF,  U, V, W, TH, mu, kx, kz,F_Vel_func)
+CALL Poisson_RHS(Re, Ri, n1, n2, n3,NX, NY, NZ,  DY, DYF, U, V, W, TH, mu, kx, kz, &
+K_start, K_end, plan_bkd, plan_fwd, F_Vel_func)
+
 CALL Initial_Conditions_Pressure(NX, NY, NZ, kx, kz, DY, DYF, plan_bkd, &
                                         F_vel_func, P)
 
@@ -389,7 +391,7 @@ stau=(A1*Ri* time_final)/(Eo*T_ref**2) * TH_fluc
 
 
 CALL Poisson_Adjoint_RHS (v1,v2,v3,stau, U, V, W,TH,THB, mu, U_bar, V_bar, W_bar, &
-kx, kz, NX, NY, NZ, DY, DYF, Re, plan_bkd, plan_fwd, F_Adj_Vel_func)
+kx, kz, NX, NY, NZ, DY, DYF, K_start, K_end, Re, A2, plan_bkd, plan_fwd, F_Adj_Vel_func)
 
 CALL Initial_Conditions_Pressure(NX, NY, NZ, kx, kz, DY, DYF, plan_bkd, &
                                         F_Adj_Vel_func, Q)
