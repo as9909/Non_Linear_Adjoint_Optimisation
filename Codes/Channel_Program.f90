@@ -112,7 +112,7 @@ REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
     v3_wall_Upper=0.0_DP, stau_wall_Lower=0.0_DP, stau_wall_Upper=0.0_DP, &
     Kick_Dist_amp_Q=0.0_DP
 REAL(KIND=DP) :: delta_t, time, time_final=0.01_DP, T_ref=290.0_DP,&
-                 Delta_T_Dim=270.0_DP, A1=0.5_DP, A2=0.5_DP,Dissipation,&
+                 Delta_T_Dim=10.0_DP, A1=0.5_DP, A2=0.5_DP,Dissipation,&
     		 JJ, J_old, Eo, ETau, vel_norm_sq, TH_norm_sq, eps
 
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
