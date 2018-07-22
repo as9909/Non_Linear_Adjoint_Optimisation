@@ -38,7 +38,9 @@ P = 0.0_DP
 DO I  = 1,NX
   DO J = 1, NZ
     DO K = 0, NY+1
-U(I,J,K)=3.0_DP/2.0_DP*U_bulk*(1.0_DP-(2.0_DP*GYF(K)/Ly)**2)*0.0_DP
+!U(I,J,K)=3.0_DP/2.0_DP*U_bulk*(1.0_DP-(2.0_DP*GYF(K)/Ly)**2)*0.0_DP
+U(I,J,K)=-(2.0_DP/0.6_DP) * ( 1.0_DP+1.0_DP/TANH(0.6_DP) &
++(GYF(K)-1.0_DP/TANH(0.6_DP)) * EXP( 0.6_DP*(1.0_DP+GYF(K)) ) )*0.0_DP
 END DO
 END DO
 END DO

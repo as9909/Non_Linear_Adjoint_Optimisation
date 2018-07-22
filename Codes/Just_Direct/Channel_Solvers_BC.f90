@@ -445,7 +445,9 @@ INTEGER :: I, J, K
 ! make temperature dimensional and then divide by reference temperature (input)
 FORALL (I=1:NX, J=1:NZ, K=0:NY+1)
 T_Total(I,J,K)=(TH(I,J,K)+THB(I,J,K))*Delta_T_Dim/T_ref+1.0_DP
-mu(I,J,K) = EXP(a + b/T_Total(I,J,K) + c/T_Total(I,J,K)**2)
+! mu(I,J,K) = EXP(a + b/T_Total(I,J,K) + c/T_Total(I,J,K)**2)
+mu(I,J,K) = EXP(-1.0_DP*0.6_DP*THB(I,J,K))
+!mu(I,J,K) = 1.0_DP-0.25_DP*THB(I,J,K))
 END FORALL
 FORALL  (I=1:NX, J=1:NZ, K=1:NY)
 ! viscosity interpolated at the base grid (second order)

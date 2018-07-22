@@ -100,15 +100,15 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
 
 
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
-  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=1.0_DP, Lz=2.0_DP*pi, Stretch_y=2_DP,&
+  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=2.0_DP, Lz=2.0_DP*pi, Stretch_y=0.00001_DP,&
   n1=0.0_DP, n2=1.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.0_DP, &
     Dist_amp=0.0_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
-    W_wall_upper=0.0_DP, THB_wall_lower=10.0_DP, THB_wall_upper=10.0_DP, &
-    CFL=0.5_DP, Ri=0.0_DP, Pr=7.0_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP
+    W_wall_upper=0.0_DP, THB_wall_lower=0.0_DP, THB_wall_upper=2.0_DP, &
+    CFL=0.95_DP, Ri=0.0_DP, Pr=7.0_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP
 
 
-REAL(KIND=DP) :: delta_t, time, time_final=200.0_DP, T_ref=290.0_DP,&
+REAL(KIND=DP) :: delta_t, time, time_final=500.0_DP, T_ref=290.0_DP,&
                  Delta_T_Dim=THB_wall_upper-THB_wall_lower, Drive_x, Drive_y, Drive_z
 
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
@@ -150,7 +150,7 @@ alpha(1) = 8.0_DP/15.0_DP
 alpha(2) = 2.0_DP/15.0_DP
 alpha(3) = 1.0_DP/3.0_DP
 
-Drive_x=(12.0_DP/Re)*(U_bulk/Ly**2)
+Drive_x=2.0_DP/Re!(12.0_DP/Re)*(U_bulk/Ly**2)
 Drive_y=0.0_DP
 Drive_z=0.0_DP
 ! --------------- Initialise fft plans and generate wavenumbers ----------------
@@ -196,8 +196,8 @@ write(12, *) U(10,10,:)
 open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
 write(15, *) U(20,30,:)
 
-open(unit=13,file='V_vel.txt', status='unknown', action='write', form='formatted')
-write(13, *) V(10,10,:)
+open(unit=13,file='Temperature.txt', status='unknown', action='write', form='formatted')
+write(13, *) TH(10,10,:)
 
 open(unit=14,file='W_vel.txt', status='unknown', action='write', form='formatted')
 write(14, *) W(10,10,:)
@@ -245,8 +245,8 @@ write(12, *) U(10,10,:)
 open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
 write(15, *) U(20,30,:)
 
-open(unit=13,file='V_vel.txt', status='unknown', action='write', form='formatted')
-write(13, *) V(10,10,:)
+open(unit=13,file='Temperature.txt', status='unknown', action='write', form='formatted')
+write(13, *) TH(10,10,:)
 
 open(unit=14,file='W_vel.txt', status='unknown', action='write', form='formatted')
 write(14, *) W(10,10,:)
@@ -300,8 +300,8 @@ open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatte
 write(15, *) U(20,30,:)
  close(15)
 
-open(unit=13,file='V_vel.txt', status='unknown', action='write', form='formatted')
-write(13, *) V(10,10,:)
+ open(unit=13,file='Temperature.txt', status='unknown', action='write', form='formatted')
+ write(13, *) TH(10,10,:)
  close(13)
 
 open(unit=14,file='W_vel.txt', status='unknown', action='write', form='formatted')
