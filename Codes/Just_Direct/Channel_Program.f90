@@ -87,8 +87,8 @@ USE Convergence_Check
 USE, INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 include 'fftw3.f03'
-
-INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=32, NY=33, NZ=32
+include 'fftw3l.f03'
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=16, NY=32, NZ=32
 INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       W_BC_Lower=1, W_BC_Upper=1, THB_BC_TYPE_X=1, &
                       THB_BC_TYPE_Y=1, THB_BC_TYPE_Z=1, THB_BC_Lower=1, &
@@ -98,20 +98,22 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                      v2_BC_Lower=1, v2_BC_Upper=1, v3_BC_Lower=1, v3_BC_Upper=1, &
                      stau_BC_Lower=1, stau_BC_Upper=1
 
-REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
-  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=2.0_DP, Lz=2.0_DP*pi, Stretch_y=0.0001_DP,&
-  n1=0.0_DP, n2=1.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.0_DP, &
+! pi=4.0_DP*ATAN(1.0_DP),
+REAL(KIND=DP), PARAMETER ::  pi=4.0_DP*ATAN(1.0_DP), &
+ U_bulk=1.0_DP, &
+  Kick_ini_vel=0.01_DP, Lx=4.0_DP*pi, Ly=2.0_DP, Lz=2.0_DP*pi, Stretch_y=0.0000005_DP,&
+  n1=0.0_DP, n2=1.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.00_DP, &
     Dist_amp=0.0_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
-    W_wall_upper=0.0_DP, THB_wall_lower=0.0_DP, THB_wall_upper=2.0_DP, &
-    CFL=0.95_DP, Ri=0.0_DP, Pr=7.0_DP, Re=50.0_DP, Kick_Dist_amp_P=0.0_DP
+    W_wall_upper=0.0_DP, THB_wall_lower=0.0_DP, THB_wall_upper=0.0_DP, &
+    CFL=0.5_DP, Ri=0.0_DP, Pr=1.0_DP, Re=100.0_DP, Kick_Dist_amp_P=0.0_DP
 
 
-REAL(KIND=DP) :: delta_t, time, time_final=500.0_DP, T_ref=290.0_DP,&
+REAL(KIND=DP) :: delta_t, time, time_final=100.0_DP, T_ref=290.0_DP,&
                  Delta_T_Dim=THB_wall_upper-THB_wall_lower, Drive_x, Drive_y, Drive_z
 
 REAL(KIND=DP), DIMENSION(1:3) :: gamma, zeta, alpha
-COMPLEX(C_DOUBLE_COMPLEX),PARAMETER :: ii=(0.d0, 1.d0)
+
 REAL(KIND=DP), DIMENSION(1:NX) :: GX
 REAL(KIND=DP), DIMENSION(0:NY+1) :: GY, GYF
 REAL(KIND=DP), DIMENSION(1:NZ) :: GZ, kz
@@ -136,9 +138,13 @@ CHARACTER(LEN=:), allocatable :: filepath
 !write(*,*) filepath
 !filepath = trim(filepath) // 'IO_Files_Store'
 !write(*,*) filepath
-!filepath='/home/ritabrata/Desktop/Non_Linear_Adjoint_Optimisation-master/Codes/IO_Files_Store/'
+!filepath='/home/arjun.sharma/Channel_Flow/IO_Files_Store/'
+!filepath='/home/ritabrata.thakur/Desktop/Just_Direct/IO_Files_Store/'
+filepath='/Users/arjunsharma/Documents/NextCloud/Non_Linear_Adjoint_Optimisation/Codes/Just_Direct/IO_Files_Store/'
+
 !CHARACTER(LEN=18) ::filename_2
 ! ---------- Find a way to remove these from here and hard code them -----------
+
 gamma(1) = 8.0_DP/15.0_DP
 gamma(2) = 5.0_DP/12.0_DP
 gamma(3) = 3.0_DP/4.0_DP
@@ -149,9 +155,9 @@ alpha(1) = 8.0_DP/15.0_DP
 alpha(2) = 2.0_DP/15.0_DP
 alpha(3) = 1.0_DP/3.0_DP
 
-Drive_x=2.0_DP/Re!(12.0_DP/Re)*(U_bulk/Ly**2)
+Drive_z=(12.0_DP/Re)*(U_bulk/Ly**2) !2.0_DP/Re!
 Drive_y=0.0_DP
-Drive_z=0.0_DP
+Drive_X=0.0_DP
 ! --------------- Initialise fft plans and generate wavenumbers ----------------
 CALL FFT_Initialise(NX, NZ, plan_fwd, plan_bkd)
 CALL create_wavenumbers_1D( NX, NZ, Lx, Lz, kx, kz)
@@ -189,32 +195,24 @@ open(unit=14,file='yf_grid.txt', status='unknown', action='write', form='formatt
 write(14, *) GYF
 close(14)
 
-open(unit=12,file='U_vel.txt', status='unknown', action='write', form='formatted')
-write(12, *) U(10,10,:)
 
-open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
-write(15, *) U(20,30,:)
+open(unit=14,file='x_grid.txt', status='unknown', action='write', form='formatted')
+write(14, *) GX
+close(14)
 
-open(unit=13,file='Temperature.txt', status='unknown', action='write', form='formatted')
-write(13, *) TH(10,10,:)
+open(unit=14,file='z_grid.txt', status='unknown', action='write', form='formatted')
+write(14, *) GZ
+close(14)
 
-open(unit=14,file='W_vel.txt', status='unknown', action='write', form='formatted')
-write(14, *) W(10,10,:)
+close(14)
+!open(unit=12,file='U_vel.txt', status='unknown', action='write', form='formatted')
+!write(12, *) U(8,8,:)
 
-open(unit=16,file='mu.txt', status='unknown', action='write', form='formatted')
-write(16, *) mu_dbl_breve(10,10,:)
+!open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
+!write(15, *) U(8,8,:)
 
-open(unit=17,file='pressure1.txt', status='unknown', action='write', form='formatted')
-write(17, *) P(10,10,:)
+!print *, maxval(DYF)
 
-open(unit=18,file='pressure2.txt', status='unknown', action='write', form='formatted')
-write(18, *) P(15,20,:)
-
-open(unit=19,file='pressure3.txt', status='unknown', action='write', form='formatted')
-write(19, *) P(30,15,:)
-
-open(unit=20,file='chk_Poss_RHS.txt', status='unknown', action='write', form='formatted')
-write(20, *) chk_Poss_RHS(5,20,:)
 
 ! --------------------------- Direct Solver Start ------------------------------
 ALLOCATE(time_ary(1))
@@ -226,6 +224,26 @@ iter = 0
 ! Direct Solution
 DO WHILE ((time .lt. time_final)) ! Start RK solver (fwd) loop
 
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((U_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((V_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((W_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_4,status='unknown', action='write',form='formatted')
+ write(11,*)((((TH_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
 iter = iter + 1
 CALL courant( NX, NY, NZ, Lx, Ly, Lz, DYF, CFL, Ri, Pr, Re, U, V, W, &
                     THB_wall_lower, delta_t )
@@ -238,32 +256,11 @@ U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower, &
  U_wall_Upper,V_wall_Lower,V_wall_Upper, W_wall_Lower,W_wall_Upper,&
  U_store,  V_store, W_store, TH_store, A_st )
 
-open(unit=12,file='U_vel.txt', status='unknown', action='write', form='formatted')
-write(12, *) U(10,10,:)
+!open(unit=12,file='U_vel.txt', status='unknown', action='write', form='formatted')
+!write(12, *) U(8,8,:)
 
-open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
-write(15, *) U(20,30,:)
-
-open(unit=13,file='Temperature.txt', status='unknown', action='write', form='formatted')
-write(13, *) TH(10,10,:)
-
-open(unit=14,file='W_vel.txt', status='unknown', action='write', form='formatted')
-write(14, *) W(10,10,:)
-
-open(unit=16,file='mu.txt', status='unknown', action='write', form='formatted')
-write(16, *) mu(10,10,:)
-
-open(unit=17,file='pressure1.txt', status='unknown', action='write', form='formatted')
-write(17, *) P(10,10,:)
-
-open(unit=18,file='pressure2.txt', status='unknown', action='write', form='formatted')
-write(18, *) P(15,20,:)
-
-open(unit=19,file='pressure3.txt', status='unknown', action='write', form='formatted')
-write(19, *) P(30,15,:)
-
-open(unit=20,file='chk_Poss_RHS.txt', status='unknown', action='write', form='formatted')
-write(20, *) chk_Poss_RHS(5,20,:)
+!open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
+!write(15, *) U(8,8,:)
 
 
 
@@ -276,8 +273,29 @@ DEALLOCATE(time_ary)
 ALLOCATE(time_ary(size(temp_time)))
 time_ary=temp_time
 DEALLOCATE(temp_time)
-PRINT *, 'Iter: ', iter, 'Time:', time, 'Max u: ', maxval(U)
+PRINT *, 'Iter: ', iter, 'time:', time, 'Max u: ', maxval(U), 'Max v: ', maxval(V), 'Max w: ', maxval(W)
 END DO ! Ending RK Solver (fwd) loop
+
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((U_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((V_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((W_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_4,status='unknown', action='write',form='formatted')
+ write(11,*)((((TH_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
 
 delta_t=time-time_final ! Define the last iteration to finish exactly at t= time_final
 
@@ -291,39 +309,33 @@ U, V, W, P, TH, THB,mu, mu_dbl_breve, T_ref,Delta_T_Dim, U_wall_Lower,U_wall_Upp
 
 iter=iter+1
 
-open(unit=12,file='U_vel.txt', status='unknown', action='write', form='formatted')
-write(12, *) U(10,10,:)
- close(12)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'U_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((U_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'V_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((V_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_3,'(A,I3.3,A,I7.7,A)') 'W_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_3,status='unknown', action='write',form='formatted')
+ write(11,*)((((W_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+ write(filename_4,'(A,I3.3,A,I7.7,A)') 'TH_total_',iter_big,'_',iter,'.txt'
+open(unit=11,file=filepath//filename_4,status='unknown', action='write',form='formatted')
+ write(11,*)((((TH_Store(i1,i2,i3,i4), &
+      i1=1,NX),i2=1,NZ),i3=0,NY+1),i4=1,3)
+ close(11)
+!open(unit=12,file='U_vel.txt', status='unknown', action='write', form='formatted')
+!write(12, *) U(8,8,:)
+ !close(12)
 
-open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
-write(15, *) U(20,30,:)
- close(15)
-
- open(unit=13,file='Temperature.txt', status='unknown', action='write', form='formatted')
- write(13, *) TH(10,10,:)
- close(13)
-
-open(unit=14,file='W_vel.txt', status='unknown', action='write', form='formatted')
-write(14, *) W(10,10,:)
- close(14)
-
-open(unit=16,file='mu.txt', status='unknown', action='write', form='formatted')
-write(16, *) mu(10,10,:)
- close(16)
-
-
-open(unit=17,file='pressure1.txt', status='unknown', action='write', form='formatted')
-write(17, *) P(10,10,:)
- close(17)
-open(unit=18,file='pressure2.txt', status='unknown', action='write', form='formatted')
-write(18, *) P(15,20,:)
- close(18)
-open(unit=19,file='pressure3.txt', status='unknown', action='write', form='formatted')
-write(19, *) P(30,15,:)
- close(19)
-open(unit=20,file='chk_Poss_RHS.txt', status='unknown', action='write', form='formatted')
-write(20, *) chk_Poss_RHS(5,20,:)
- close(20)
+!open(unit=15,file='U2_vel.txt', status='unknown', action='write', form='formatted')
+!write(15, *) U(Nx,Nz,:)
+ !close(15)
 
 
  ALLOCATE(temp_time(size(time_ary)+1 ))

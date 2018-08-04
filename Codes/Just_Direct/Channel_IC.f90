@@ -15,6 +15,7 @@ USE Fourier_Spectral
 USE Channel_Solvers_BC
 IMPLICIT NONE
 include 'fftw3.f03'
+include 'fftw3l.f03'
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: U_BC_Lower, U_BC_Upper, V_BC_Lower, V_BC_Upper, &
                        W_BC_Lower, W_BC_Upper
@@ -38,14 +39,19 @@ P = 0.0_DP
 DO I  = 1,NX
   DO J = 1, NZ
     DO K = 0, NY+1
-!U(I,J,K)=3.0_DP/2.0_DP*U_bulk*(1.0_DP-(2.0_DP*GYF(K)/Ly)**2)*0.0_DP
-U(I,J,K)=-(2.0_DP/0.6_DP) * ( 1.0_DP+1.0_DP/TANH(0.6_DP) &
-+(GYF(K)-1.0_DP/TANH(0.6_DP)) * EXP( 0.6_DP*(1.0_DP+GYF(K)) ) )
+!      U(I,J,K)=3.0_DP/2.0_DP*U_bulk*(1.0_DP-(2.0_DP*GYF(K)/Ly)**2)
+      W(I,J,K)=3.0_DP/2.0_DP*U_bulk*(1.0_DP-(2.0_DP*GYF(K)/Ly)**2)
+!U(I,J,K)=-(2.0_DP/0.6_DP) * ( 1.0_DP+1.0_DP/TANH(0.6_DP) &
+!+(GYF(K)-1.0_DP/TANH(0.6_DP)) * EXP( 0.6_DP*(1.0_DP+GYF(K)) ) )
+
+!U(I,J,K) = -(2.0_DP/0.25_DP) * (( -2.0_DP*log((1.0_DP-2.0_DP*0.25_DP)/&
+!(1.0_DP-0.25_DP*(1.0_DP+GYF(K)))))/log(1.0_DP-2.0_DP*0.25_DP) + 1.0_DP - GYF(K))
+
 END DO
 END DO
 END DO
 V=0.0_DP
-W=0.0_DP
+U=0.0_DP
 CALL RANDOM_SEED
 DO I  = 1,NX
   DO J = 1, NZ
@@ -68,11 +74,13 @@ W(:,:,NY+1)=0.0_DP
 CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
   V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_Lower, V_wall_Lower, W_wall_Lower, &
    U_wall_Upper, V_wall_Upper, W_wall_Upper, NX, NY, NZ, DY, DYF, U, V, W)
+! ------------------------ Dangerously Wrong: Think Again ----------------------
 CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
                               plan_bkd, U, V, W, P)
 CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
 V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_Lower, W_wall_lower, &
 U_wall_upper, V_wall_Upper, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
+! ------------------------------------------------------------------------------
 END SUBROUTINE Initial_Conditions_velocity
 
 ! ------------ 2. Subroutine for initialising background temperature -----------
@@ -81,7 +89,8 @@ SUBROUTINE Initial_Conditions_Background_Temperature( NX, NY, NZ, THB_BC_TYPE_X,
  Lx, Ly, Lz, THB_wall_lower, THB_wall_upper, GX, GYF, GZ, THB)
 IMPLICIT NONE
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
-REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP)
+REAL(KIND=DP), PARAMETER ::  pi=4.0_DP*ATAN(1.0_DP)
+!pi=4.0_DP*ATAN(1.0_DP)
 INTEGER, INTENT(IN) :: NX, NY, NZ, THB_BC_TYPE_X, THB_BC_TYPE_Y, THB_BC_TYPE_Z,&
                        THB_BC_Lower, THB_BC_Upper, Hydro_Background
 REAL(KIND=DP), INTENT(IN) :: Lx, Ly, Lz, THB_wall_lower, THB_wall_upper
@@ -165,6 +174,7 @@ INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER :: I, J, K
 INTEGER, DIMENSION(:), ALLOCATABLE :: seed
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP)
+! pi=4.0_DP*ATAN(1.0_DP)
 REAL(KIND=DP) :: Rand_num
 REAL(KIND=DP), INTENT(IN) :: Kick, Dist_amp, Ly
 INTEGER, INTENT(OUT) :: K_Start, K_End
@@ -198,16 +208,16 @@ DO K=0,NY+1
     ! Dirichlet on both walls
     K_Start=1
     K_End=NY!-1
-    TH(I,J,1) = 0
-    TH(I,J,0) = 0
-    TH(I,J,NY) = 0
-    TH(I,J,NY+1) = 0
+    TH(I,J,1) = 0.0_DP
+    TH(I,J,0) = 0.0_DP
+    TH(I,J,NY) = 0.0_DP
+    TH(I,J,NY+1) = 0.0_DP
   ELSEIF ((TH_BC_Lower .EQ. 2) .AND. (TH_BC_Upper .EQ. 1)) THEN
     ! Dirichlet on lower wall and Neumann on upper
     K_Start=2
     K_End=NY
-    TH(I,J,0) = 0
-    TH(I,J,1) = 0
+    TH(I,J,0) = 0.0_DP
+    TH(I,J,1) = 0.0_DP
     TH(I,J,NY) = TH(I,J,NY-1)
     TH(I,J,NY+1) = TH(I,J,NY)
   ELSEIF ((TH_BC_Lower .EQ. 1) .AND. (TH_BC_Upper .EQ. 2)) THEN
@@ -216,8 +226,8 @@ DO K=0,NY+1
     K_End=NY-1
     TH(I,J,1) = TH(I,J,2)
     TH(I,J,0) = TH(I,J,1)
-    TH(I,J,NY) = 0
-    TH(I,J,NY+1) = 0
+    TH(I,J,NY) = 0.0_DP
+    TH(I,J,NY+1) = 0.0_DP
   ELSEIF ((TH_BC_Lower .EQ. 2) .AND. (TH_BC_Upper .EQ. 2)) THEN
     K_Start=1
     K_End=NY
@@ -240,6 +250,7 @@ USE Fourier_Spectral
 USE Channel_Solvers_BC
 IMPLICIT NONE
 include 'fftw3.f03'
+include 'fftw3l.f03'
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: NX, NY, NZ
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(OUT) :: P
@@ -300,6 +311,7 @@ K_start, K_end, plan_bkd, plan_fwd, F_Vel_func)
   USE Fourier_Spectral
   IMPLICIT NONE
   include 'fftw3.f03'
+  !include 'fftw3l.f03'
   INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
   INTEGER, INTENT(IN) :: K_Start, K_End
   INTEGER, INTENT(IN) :: NX, NY, NZ
@@ -404,7 +416,7 @@ K_start, K_end, plan_bkd, plan_fwd, F_Vel_func)
     muyy(I,J,K)= ((mu(I,J,K+1)-mu(I,J,K))/DY(K)-(mu(I,J,K)-mu(I,J,K-1))/DY(K-1))/DYF(K)
   END FORALL
 
-Vel_func=(-1.0_DP)*(Ux**2+V_bary**2+Wz**2+2*(Uy*V_barx+Uz*Wx+V_barz*Wy))
+Vel_func=(-1.0_DP)*(Ux**2+V_bary**2+Wz**2+2.0_DP*(Uy*V_barx+Uz*Wx+V_barz*Wy))
 
 Vel_func=Vel_func+Ri*(THx*n1+THy*n2+THz*n3)
 
