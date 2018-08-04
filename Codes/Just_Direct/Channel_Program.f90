@@ -88,7 +88,7 @@ USE, INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 include 'fftw3.f03'
 
-INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=32, NY=32, NZ=32
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=32, NY=33, NZ=32
 INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       W_BC_Lower=1, W_BC_Upper=1, THB_BC_TYPE_X=1, &
                       THB_BC_TYPE_Y=1, THB_BC_TYPE_Z=1, THB_BC_Lower=1, &
@@ -98,9 +98,8 @@ INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                      v2_BC_Lower=1, v2_BC_Upper=1, v3_BC_Lower=1, v3_BC_Upper=1, &
                      stau_BC_Lower=1, stau_BC_Upper=1
 
-
 REAL(KIND=DP), PARAMETER :: pi=4.0_DP*ATAN(1.0_DP), U_bulk=1.0_DP, &
-  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=2.0_DP, Lz=2.0_DP*pi, Stretch_y=0.00001_DP,&
+  Kick_ini_vel=0.0_DP, Lx=2.0_DP*pi, Ly=2.0_DP, Lz=2.0_DP*pi, Stretch_y=0.0001_DP,&
   n1=0.0_DP, n2=1.0_DP, n3=0.0_DP, Kick_ini_temp_fluct=0.0_DP, &
     Dist_amp=0.0_DP,     U_wall_lower=0.0_DP,    U_wall_upper=0.0_DP, &
     V_wall_lower=0.0_DP, V_wall_upper=0.0_DP,    W_wall_lower=0.0_DP, &
@@ -277,7 +276,7 @@ DEALLOCATE(time_ary)
 ALLOCATE(time_ary(size(temp_time)))
 time_ary=temp_time
 DEALLOCATE(temp_time)
-PRINT *, 'Iter: ', iter, 'Delta time:', delta_t, 'Max u: ', maxval(U)
+PRINT *, 'Iter: ', iter, 'Time:', time, 'Max u: ', maxval(U)
 END DO ! Ending RK Solver (fwd) loop
 
 delta_t=time-time_final ! Define the last iteration to finish exactly at t= time_final

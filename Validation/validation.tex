@@ -1,0 +1,48 @@
+\documentclass[preprint,12pt]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{lipsum}
+\usepackage{amsmath,accents}
+\usepackage[labelfont={small}, font={normal}]{subfig} 
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{amssymb}
+\usepackage{lineno}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+
+\title{\vspace{-3cm}Validation Cases \vspace{-1.5cm}}
+
+\begin{document}
+	\maketitle	
+	\vspace{-0.8cm}
+	
+	\section{Direct Solver}
+	\subsection{Steady States}
+	\subsubsection{Uniform Viscosity}
+	
+		\begin{figure}[h!]
+		\centering
+		\subfloat[Steady State evolve: uniform grid]{\includegraphics[width=0.48\textwidth]{stretched_grid_start_constant_viscosity.eps}\label{fig:stretched_grid_start_constant_viscosity} }\hfill
+		\subfloat[Error: Steady State evolve: uniform grid]{\includegraphics[width=0.48\textwidth]{Error_stretched_grid_start_constant_viscosity.eps}\label{fig:Error_stretched_grid_start_constant_viscosity} }\\
+		\caption {Simulations for uniform viscosity. \label{fig:uniform viscosity}}
+	\end{figure}
+
+	\subsubsection{Stratified Viscosity: Model 1}
+	\begin{figure}[h!]
+		\centering
+		\subfloat[Steady State evolve: uniform grid]{\includegraphics[width=0.48\textwidth]{uniform_grid_evolve_stratified_viscosity.eps}\label{fig:uniform_grid_evolve_stratified_viscosity} }
+		\subfloat[Error: Steady State evolve: uniform grid]{\includegraphics[width=0.48\textwidth]{Error_uniform_grid_evolve_stratified_viscosity.eps}\label{fig:Error_uniform_grid_evolve_stratified_viscosity} }\\
+		\subfloat[Steady State evolve: stretched grid]{\includegraphics[width=0.48\textwidth]{stretched_grid_evolve_stratified_viscosity.eps}\label{fig:stretched_grid_evolve_stratified_viscosity} }
+		\subfloat[Error: Steady State evolve: stretched grid]{\includegraphics[width=0.48\textwidth]{Error_stretched_grid_evolve_stratified_viscosity.eps}\label{fig:Error_stretched_grid_evolve_stratified_viscosity} }
+			\end{figure}
+		
+			\begin{figure}[h!]
+			\centering
+		\subfloat[Steady State start: uniform grid]{\includegraphics[width=0.48\textwidth]{uniform_grid_steady_stratified_viscosity.eps}\label{fig:uniform_grid_steady_stratified_viscosity} }
+		\subfloat[Error: Steady State start: uniform grid]{\includegraphics[width=0.48\textwidth]{Error_uniform_grid_steady_stratified_viscosity.eps}\label{fig:Error_uniform_grid_steady_stratified_viscosity} }\\
+		\subfloat[Steady State start: uniform grid]{\includegraphics[width=0.48\textwidth]{stretched_grid_steady_stratified_viscosity.eps}\label{fig:stretched_grid_steady_stratified_viscosity} }
+		\subfloat[Error: Steady State start: uniform grid]{\includegraphics[width=0.48\textwidth]{Error_stretched_grid_steady_stratified_viscosity.eps}\label{fig:Error_stretched_grid_steady_stratified_viscosity} }
+		\caption {Simulations for viscosity model 1. \label{fig:stratified viscosity 1}}
+	\end{figure}
+\end{document}
