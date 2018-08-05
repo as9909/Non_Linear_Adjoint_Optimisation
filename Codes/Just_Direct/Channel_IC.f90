@@ -66,11 +66,18 @@ DO I  = 1,NX
   END DO
 END DO
 U(:,:,0)=0.0_DP
+U(:,:,1)=0.0_DP ! Change to wall velocity
+U(:,:,NY)=0.0_DP ! Change to wall velocity
 U(:,:,NY+1)=0.0_DP
-V(:,:,0)=0.0_DP
-V(:,:,NY+1)=0.0_DP
+V(:,:,0)=0.0_DP! Change to wall velocity, remember that V is not defined at wall location
+V(:,:,1)=0.0_DP! Change to wall velocity, remember that V is not defined at wall location
+V(:,:,NY)=0.0_DP! Change to wall velocity, remember that V is not defined at wall location
+V(:,:,NY+1)=0.0_DP! Change to wall velocity, remember that V is not defined at wall location
 W(:,:,0)=0.0_DP
+W(:,:,1)=0.0_DP ! Change to wall velocity
+W(:,:,NY)=0.0_DP ! Change to wall velocity
 W(:,:,NY+1)=0.0_DP
+
 CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
   V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_Lower, V_wall_Lower, W_wall_Lower, &
    U_wall_Upper, V_wall_Upper, W_wall_Upper, NX, NY, NZ, DY, DYF, U, V, W)
@@ -80,6 +87,7 @@ CALL Remove_Divergence(NX, NY, NZ, Lx, Lz, alfa_t, kx, kz, DY, DYF, plan_fwd, &
 CALL Velocity_IC_Boundary_Conditions(U_BC_Lower, U_BC_Upper, V_BC_Lower, &
 V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_Lower, W_wall_lower, &
 U_wall_upper, V_wall_Upper, W_wall_upper, NX, NY, NZ, DY, DYF, U, V, W)
+
 ! ------------------------------------------------------------------------------
 END SUBROUTINE Initial_Conditions_velocity
 

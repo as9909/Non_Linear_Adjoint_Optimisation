@@ -9,7 +9,7 @@ USE, INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 include 'fftw3.f03'
 include 'fftw3l.f03'
-INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=16, NY=32, NZ=32
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), NX=16, NY=64, NZ=32
 INTEGER, PARAMETER :: U_BC_Lower=1, U_BC_Upper=1, V_BC_Lower=1, V_BC_Upper=1, &
                       W_BC_Lower=1, W_BC_Upper=1, THB_BC_TYPE_X=1, &
                       THB_BC_TYPE_Y=1, THB_BC_TYPE_Z=1, THB_BC_Lower=1, &
@@ -90,6 +90,14 @@ CALL Initial_Conditions_velocity (U_BC_Lower, U_BC_Upper, V_BC_Lower, &
 V_BC_Upper, W_BC_Lower, W_BC_Upper,U_wall_lower, V_wall_lower, W_wall_lower, &
 U_wall_upper, V_wall_upper, W_wall_upper, NX, NY, NZ, Lx, Ly, Lz, kx, kz, DY, &
 DYF, plan_fwd, plan_bkd, U_bulk, Kick_ini_vel, GYF, U, V, W)
+
+open(unit=14,file='yf_grid.txt', status='unknown', action='write', form='formatted')
+write(14, *) GYF
+close(14)
+
+open(unit=14,file='y_grid.txt', status='unknown', action='write', form='formatted')
+write(14, *) GY
+close(14)
 
 CALL FFT_destroy(plan_fwd, plan_bkd)
 END PROGRAM Check_Divergence

@@ -25,16 +25,20 @@ INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 COMPLEX(KIND=DP),PARAMETER :: ii=(0.0_DP, 1.0_DP)
 INTEGER, INTENT(IN) :: NX, NY, NZ
 INTEGER :: I, J, K
-COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V, F_W, F_P, F_Q, F_Ux, F_Wz
-REAL(KIND=DP), DIMENSION(1:NX/2,1:NZ,0:NY+1), INTENT(INOUT) :: U, V, W, P
-REAL(KIND=DP), DIMENSION(1:NX/2,1:NZ,0:NY+1):: Ux, VyF, Wz, Diver
-REAL(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: A, B, C
+COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: F_U, F_V, F_W, F_P, F_Q, F_Ux, F_Wz, Check,F_Q_old
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(INOUT) :: U, V, W, P
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1):: Ux, VyF, Wz, Diver
+REAL(KIND=DP), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: A, B, C, A_old, B_old, C_old
 !COMPLEX(KIND=DP), DIMENSION(1:NX/2+1,0:NY+1):: Vel_Div
 REAL(KIND=DP), INTENT(IN) :: Lx, Lz, alfa_t
 REAL(KIND=DP), DIMENSION(1:NX/2+1), INTENT(IN) :: kx
 REAL(KIND=DP), DIMENSION(1:NZ), INTENT(IN) :: kz
 REAL(KIND=DP), DIMENSION(0:NY), INTENT(IN) :: DY, DYF
 type(C_PTR), INTENT(IN) :: plan_fwd, plan_bkd
+open(unit=14,file='W_i.txt', status='unknown', action='write', form='formatted')
+write(14, *) W(5,5,:)
+close(14)
+
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, U, F_U)
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, V, F_V)
 CALL physical_to_fourier_2D( plan_fwd, NX, NY, NZ, W, F_W)
@@ -51,20 +55,20 @@ FORALL (I=1:NX, J=1:NZ, K=0:NY)
 VyF(I,J,K)=(V(I,J,K+1)-V(I,J,K))/(DYF(K))
 END FORALL
 Diver=0.0_DP
-FORALL (I=1:NX, J=1:NZ, K=0:NY)
+FORALL (I=1:NX, J=1:NZ, K=2:NY-1)
 DIVER(I,J,K)=Ux(I,J,K)+VyF(I,J,K)+Wz(I,J,K)
 END FORALL
 print *,  'Before Removing Divergence:'
 print *, maxval(DIVER)
+open(unit=14,file='Wz_before.txt', status='unknown', action='write', form='formatted')
+write(14, *) Wz(5,5,:)
+close(14)
 ! ------------------------------------------------------------------------------
-
 ! Initialise the matrix and vector
-
 A = 0.0_DP
 B = 1.0_DP
  C = 0.0_DP
 F_Q = (0.0_DP,0.0_DP)
-
 DO J = 1, NZ
 DO I = 1, NX/2+1
     DO K = 1, NY
@@ -82,33 +86,68 @@ DO I=1,NX/2+1
   IF ((I.EQ.1) .AND. (J.EQ.1)) THEN
     A(I,J,1)=0.0_DP
     B(I,J,1)=1.0_DP
-    C(I,J,1)=0.0_DP
+    C(I,J,1)=-1.0_DP
     F_Q(I,J,1)=(0.0_DP,0.0_DP)
-    A(I,J,NY)=0.0_DP
+
+    A(I,J,0)=0.0_DP
+    B(I,J,0)=1.0_DP
+    C(I,J,0)=-1.0_DP
+    F_Q(I,J,0)=(0.0_DP,0.0_DP)
+
+    A(I,J,NY)=1.0_DP
     B(I,J,NY)=-1.0_DP
-    C(I,J,NY)=1.0_DP
+    C(I,J,NY)=0.0_DP
     F_Q(I,J,NY)=(0.0_DP,0.0_DP)
+
+    A(I,J,NY+1)=-1.0_DP
+    B(I,J,NY+1)=1.0_DP
+    C(I,J,NY+1)=0.0_DP
+    F_Q(I,J,NY+1)=(0.0_DP,0.0_DP)
  ELSE
   A(I,J,1)=0.0_DP
   B(I,J,1)=1.0_DP
   C(I,J,1)=-1.0_DP
   F_Q(I,J,1)=(0.0_DP,0.0_DP)
+
+  A(I,J,0)=0.0_DP
+  B(I,J,0)=1.0_DP
+  C(I,J,0)=-1.0_DP
+  F_Q(I,J,0)=(0.0_DP,0.0_DP)
+
   A(I,J,NY)=1.0_DP
   B(I,J,NY)=-1.0_DP
   C(I,J,NY)=0.0_DP
   F_Q(I,J,NY)=(0.0_DP,0.0_DP)
+
+      A(I,J,NY+1)=1.0_DP
+      B(I,J,NY+1)=-1.0_DP
+      C(I,J,NY+1)=0.0_DP
+      F_Q(I,J,NY+1)=(0.0_DP,0.0_DP)
  END IF
 END DO
 END DO
-
+F_Q_old=F_Q
+Check=0.0_DP
+A_old=A
+B_old=B
+C_old=C
   CALL Thomas_Matrix_Algorithm_fft(A,B,C,F_Q,NX,NY,NZ)
+  DO J = 1, NZ
+    DO I = 1, NX/2+1
+      DO K = 1, NY
+Check(I,J,K)=A_old(I,J,K)*F_Q(I,J,K-1)+B_old(I,J,K)*F_Q(I,J,K)+C_old(I,J,K)*F_Q(I,J,K+1)-F_Q_Old(I,J,K)
+      END DO
+    END DO
+  END DO
+  print*, maxval(real(Check))
+  print*, maxval(imag(Check))
 ! Remove Divergence from the original velocity field
 DO J = 1, NZ
   DO I = 1, NX/2+1
-    DO K = 1, NY
+    DO K = 0, NY
       F_U(I,J,K) = F_U(I,J,K) - ii * kx(I) * F_Q(I,J,K) * alfa_t
       !IF (K .ge. 2) THEN ! Ignore the ghost cells
-        F_V(I,J,K) = F_V(I,J,K) - (F_Q(I,J,K)-F_Q(I,J,K-1))/DY(K-1) * alfa_t
+      F_V(I,J,K) = F_V(I,J,K) - (F_Q(I,J,K+1)-F_Q(I,J,K))/DY(K) * alfa_t
       !END IF
       F_W(I,J,K) = F_W(I,J,K) - ii*kz(J)*F_Q(I,J,K) * alfa_t
       F_P(I,J,K) = F_P(I,J,K) + F_Q(I,J,K)
@@ -122,6 +161,7 @@ CALL fourier_to_physical_2D( plan_bkd, NX, NY, NZ, F_P, P)
 
 ! ------------------------------------------------------------------------------
 
+
 FORALL (I=1:NX/2+1,J=1:NZ,K=0:NY+1)
   F_Ux(I,J,K)=ii*kx(I)*F_U(I,J,K)
   F_Wz(I,J,K)=ii*kz(J)*F_W(I,J,K)
@@ -132,13 +172,15 @@ FORALL (I=1:NX, J=1:NZ, K=0:NY)
 VyF(I,J,K)=(V(I,J,K+1)-V(I,J,K))/(DYF(K))
 END FORALL
 Diver=0.0_DP
-FORALL (I=1:NX, J=1:NZ, K=0:NY)
-DIVER(I,J,K)=Ux(I,J,K)+VyF(I,J,K)+Wz(I,J,K)
+FORALL (I=1:NX, J=1:NZ, K=2:NY-1)
+Diver(I,J,K)=Ux(I,J,K)+VyF(I,J,K)+Wz(I,J,K)
 END FORALL
 print *,  'After Removing Divergence:'
-print *, maxval(DIVER)
+print *, maxval(Diver)
+open(unit=14,file='Wz.txt', status='unknown', action='write', form='formatted')
+write(14, *) Wz(5,5,:)
+close(14)
 ! ------------------------------------------------------------------------------
-
 END SUBROUTINE Remove_Divergence
 
 SUBROUTINE Thomas_Matrix_Algorithm_fft(A,B,C,D,NX,NY,NZ)
@@ -146,7 +188,8 @@ SUBROUTINE Thomas_Matrix_Algorithm_fft(A,B,C,D,NX,NY,NZ)
 IMPLICIT NONE
 INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: NX, NY, NZ
-REAL(KIND=DP), INTENT(INOUT), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: A, B, C
+REAL(KIND=DP), INTENT(INOUT), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: A,  C
+REAL(KIND=DP), INTENT(IN), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) ::B
 COMPLEX(KIND=DP), INTENT(INOUT), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: D
 INTEGER :: I, J, K
 DO I = 1,NX/2+1
@@ -165,6 +208,41 @@ DO J = 1,NZ
 END DO
 END DO
 END SUBROUTINE Thomas_Matrix_Algorithm_fft
+
+SUBROUTINE Thomas_Matrix_Algorithm_fft_2(A,B,C,D,NX,NY,NZ)
+! -------- This is used to implement thomas algorithm for complex RHS ----------
+IMPLICIT NONE
+INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
+INTEGER, INTENT(IN) :: NX, NY, NZ
+REAL(KIND=DP), INTENT(INOUT), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: A,  B
+REAL(KIND=DP), INTENT(IN), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) ::C
+COMPLEX(KIND=DP), INTENT(INOUT), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: D
+INTEGER :: I, J, K
+
+DO I = 1,NX/2+1
+DO J = 1,NZ
+  DO K = 0,NY
+    A(I,J,K+1)=-A(I,J,K+1)/B(I,J,K)
+    B(I,J,K+1)=B(I,J,K+1)+A(I,J,K+1)*C(I,J,K)
+    D(I,J,K+1) = D(I,J,K+1)+A(I,J,K+1)*D(I,J,K)
+  END DO
+END DO
+END DO
+
+DO I = 1,NX/2+1
+DO J = 1,NZ
+  D(I,J,NY+1) = D(I,J,NY+1)/B(I,J,NY+1)
+END DO
+END DO
+
+DO I = 1,NX/2+1
+DO J = 1,NZ
+  DO K = NY,0,-1
+    D(I,J,K) = (D(I,J,K)-C(I,J,K)*D(I,J,K+1))/B(I,J,K)
+  END DO
+END DO
+END DO
+END SUBROUTINE Thomas_Matrix_Algorithm_fft_2
 
 SUBROUTINE Thomas_Matrix_Algorithm_real(A,B,C,D,NX,NY,NZ)
 ! -------- This is used to implement thomas algorithm for real RHS ----------

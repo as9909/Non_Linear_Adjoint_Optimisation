@@ -100,10 +100,12 @@ INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14)
 INTEGER, INTENT(IN) :: NX, NY, NZ
 INTEGER :: K
 type(C_PTR), INTENT(IN) :: plan_fwd
-REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(INOUT) :: u
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(IN) :: u
+REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1) :: u_copy
 COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1), INTENT(OUT) :: fft_u
+u_copy=u
 DO K=0,Ny+1
-  CALL fftw_execute_dft_r2c (plan_fwd, u(:,:,K), fft_u(:,:,K))
+  CALL fftw_execute_dft_r2c (plan_fwd, u_copy(:,:,K), fft_u(:,:,K))
 END DO
 END SUBROUTINE physical_to_fourier_2D
 
@@ -121,9 +123,11 @@ INTEGER, INTENT(IN) :: NX, NY, NZ
 INTEGER :: K
 type(C_PTR), INTENT(IN) :: plan_bkd
 REAL(KIND=DP), DIMENSION(1:NX,1:NZ,0:NY+1), INTENT(OUT) :: u
-COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1), INTENT(INOUT) :: fft_u
+COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1), INTENT(IN) :: fft_u
+COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(1:NX/2+1,1:NZ,0:NY+1) :: fft_u_copy
+fft_u_copy=fft_u
 DO K=0,Ny+1
-  CALL fftw_execute_dft_c2r (plan_bkd, fft_u(:,:,K), u(:,:,K))
+  CALL fftw_execute_dft_c2r (plan_bkd, fft_u_copy(:,:,K), u(:,:,K))
   u(:,:,K) = u(:,:,K)/size(u(:,:,K))
 END DO
 END SUBROUTINE fourier_to_physical_2D
