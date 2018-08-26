@@ -2,7 +2,10 @@ PROGRAM ThomasTest
 
   INTEGER, PARAMETER :: DP=SELECTED_REAL_KIND(14), Ny=10
 INTEGER :: I
-REAL(KIND=DP), DIMENSION(0:Ny+1)::A,B,C, A_old,B_old,C_old, Check,D,D_old
+REAL(KIND=DP) :: l,m
+REAL(KIND=DP), DIMENSION(0:Ny+1)::A,B,C, A_old,B_old,C_old
+COMPLEX(KIND=DP), DIMENSION(0:Ny+1)::D,D_old, Check
+COMPLEX(KIND=DP),PARAMETER :: ii=(0.0_DP, 1.0_DP)
 CALL RANDOM_SEED
 
 DO I=0,Ny
@@ -13,7 +16,10 @@ DO I=0,Ny
       CALL RANDOM_NUMBER(Rand_num)
       C(I)=Rand_num
         CALL RANDOM_NUMBER(Rand_num)
-        D(I)=Rand_num
+        l=Rand_num
+          CALL RANDOM_NUMBER(Rand_num)
+          m=Rand_num
+        D(I)=cmplx(m, l)
 END DO
 A(0)=0
 C(NY+1)=0
@@ -35,5 +41,6 @@ END DO
 DO I=0,NY+1
   Check(I)=A_old(I)*D(I-1)+B_old(I)*D(I)+C_old(I)*D(I+1)-D_Old(I)
 END DO
-print*, maxval(Check)
+print*, maxval(imag(Check))
+print*, maxval(real(Check))
 END PROGRAM ThomasTest

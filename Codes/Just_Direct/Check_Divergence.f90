@@ -66,19 +66,6 @@ filepath='/Users/arjunsharma/Documents/NextCloud/Non_Linear_Adjoint_Optimisation
 !CHARACTER(LEN=18) ::filename_2
 ! ---------- Find a way to remove these from here and hard code them -----------
 
-gamma(1) = 8.0_DP/15.0_DP
-gamma(2) = 5.0_DP/12.0_DP
-gamma(3) = 3.0_DP/4.0_DP
-zeta(1)  = 0.0_DP
-zeta(2)  = -17.0_DP/60.0_DP
-zeta(3)  = -5.0_DP/12.0_DP
-alpha(1) = 8.0_DP/15.0_DP
-alpha(2) = 2.0_DP/15.0_DP
-alpha(3) = 1.0_DP/3.0_DP
-
-Drive_z=(12.0_DP/Re)*(U_bulk/Ly**2) !2.0_DP/Re!
-Drive_y=0.0_DP
-Drive_X=0.0_DP
 ! --------------- Initialise fft plans and generate wavenumbers ----------------
 CALL FFT_Initialise(NX, NZ, plan_fwd, plan_bkd)
 CALL create_wavenumbers_1D( NX, NZ, Lx, Lz, kx, kz)
